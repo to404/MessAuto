@@ -2,6 +2,13 @@
   <img src="icon.svg" width=240 />
 </p>
 
+# ⚠️暂时无法在其他电脑直接运行发布的二进制文件，但可以自行编译
+正在寻找解决办法，希望有经验的人可以在issue中提供帮助。
+用到的依赖:
+- cargo-bundle 用于将二进制文件打包为APP
+- tray-item 用于生成系统托盘
+
+
 # MessAuto
 
 MessAuto 是一款 macOS 平台 **自动提取** 短信验证码并 **粘贴回车** 的软件，百分百由Rust开发，适用于任何APP。
@@ -33,6 +40,17 @@ macOS平台可以方便地接收来自iPhone的短信，无需每次打开手机
 MessAuto 是一个菜单栏软件，启动之后，菜单栏会出现一个图标，点击菜单图标后只有两个选项，开启或退出，使用前需要点击一次开启。
 
 <img src="status_item.png" alt="statesitem.jpg" width=548>
+
+
+## 自行编译
+
+- 安装 cargo-bundle
+- 执行 cargo bundle --release 
+- 找到并右键 APP ，选择 显示包内容，修改info.plist,添加
+- `<key>LSUIElement</key>`
+- `<string>1</string>` 
+- 将 icon_16.png 添加到`Resources`文件夹下并命名为`icon.png`
+
 
 ## 感谢
 
