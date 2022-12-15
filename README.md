@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="icon.png" width=240 />
+  <img src="icon.svg" width=240 />
 </p>
 
 # MessAuto
