@@ -1,0 +1,21 @@
+[package]
+name = "MessAuto"
+version = "0.1.0"
+edition = "2021"
+description = "Automatically extract the captcha and paste it back."
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clipboard = "0.5.0"
+enigo = "0.0.14"
+home = "0.5.4"
+regex = "1.7.0"
+tray-item = "0.7.1"
+
+[package.metadata.bundle]
+name = "MessAuto"
+identifier = "com.doe.messauto"
+icon = ["icon.png"]
+copyright = "Copyright (c) LeeeSe 2022. All rights reserved."
+short_description = "Automatically extract the captcha and paste it back."
