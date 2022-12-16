@@ -1,15 +1,6 @@
 <p align="center">
-  <img src="icon.svg" width=240 />
+  <img src="icon.png" width=240 />
 </p>
-
-# ⚠️暂时无法在其他电脑直接运行发布的aarch64二进制文件，但可以自行编译
-x86_64版本可以通过转译正常运行。
-正在寻找解决办法，希望有经验的人可以在issue中提供帮助。
-用到的依赖:
-- cargo-bundle 用于将二进制文件打包为APP
-- tray-item 用于生成系统托盘
-
-目前已经确定cargo bundle生成的 aarch64.app 包转移到其他电脑上会提示安装包已损坏。直接cargo build生成的二进制文件可以正常运行，但无法显示任务栏图标（是透明的），具体细节可以前往 tray-item 查看。建议有能力的朋友自行编译，编译教程在下面。
 
 # MessAuto
 
@@ -27,7 +18,7 @@ macOS平台可以方便地接收来自iPhone的短信，无需每次打开手机
 
 ## 要求
 
-- **macOS 10.13** 以上并可以接收 **iPhone** 的短信
+- 使用 **macOS系统** （作者是 macOS 13，其他自行测试），并可以接收 **iPhone** 的短信
 - 完全磁盘访问权限（为了访问位于 `～/Library` 下的Message的数据库文件，以获取最新的短信）
 - 辅助功能权限（模拟键盘操作，自动粘贴并回车）
 
@@ -35,7 +26,7 @@ macOS平台可以方便地接收来自iPhone的短信，无需每次打开手机
 
 ## 已知缺陷
 - 部分APP或网站不支持回车登陆，需要手动点击登陆
-- ⚠️无法用于 macOS13 以下操作系统，正在寻找原因
+- 可能无法用于 macOS13 以下的版本，请自行编译
 
 ## 使用方法
 
@@ -46,12 +37,12 @@ MessAuto 是一个菜单栏软件，启动之后，菜单栏会出现一个图�
 
 ## 自行编译
 
-- 安装 cargo-bundle
-- 执行 cargo bundle --release 
+- 安装 Rust 运行环境，细节查看Rust官网
+- 执行 `cargo install cargo-bundle`
+- 执行 `cargo bundle --release`
 - 找到并右键 APP ，选择 显示包内容，修改info.plist,添加
 - `<key>LSUIElement</key>`
-- `<string>1</string>` 
-- 将 icon_16.png 添加到`Resources`文件夹下并命名为`icon.png`
+- `<string>1</string>`
 
 
 ## 感谢
