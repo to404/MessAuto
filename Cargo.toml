@@ -8,7 +8,7 @@ description = "Automatic extraction of SMS verification code for Mac platform."
 
 [dependencies]
 sys-locale = "0.3.0"
-tray-icon = "0.4.4"
+tray-icon = "0.5.1"
 tao = { git = "https://github.com/tauri-apps/tao", branch = "muda" }
 rust-i18n = "1.1.4"
 once_cell = "1.17.1"

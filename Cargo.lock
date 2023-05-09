@@ -1047,9 +1047,9 @@ dependencies = [
 
 [[package]]
 name = "muda"
-version = "0.4.5"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a3ef954ff22d2646c21ae64171b76d6e1202d214c6d3867305489d04a06db6a"
+checksum = "c3c820db003e601413e835a33b10cf51452b6415ef34ff1d862401826431c675"
 dependencies = [
  "cocoa",
  "crossbeam-channel",
@@ -1062,7 +1062,7 @@ dependencies = [
  "once_cell",
  "png",
  "thiserror",
- "windows-sys",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -1245,7 +1245,7 @@ dependencies = [
  "libc",
  "redox_syscall",
  "smallvec",
- "windows-sys",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -1603,7 +1603,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ea0b9eefabb91675082b41eb94c3ecd91af7656caee3fb4961a07c0ec8c7ca6f"
 dependencies = [
  "libc",
- "windows-sys",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -1724,9 +1724,9 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.4.4"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "405009de7f59e6dafff7afc04e1bff017d5e1531359bd05a1c52375b6f8b3716"
+checksum = "e0a1ba93b51da357afb4064093d925ded565154aca52f60d5a088b826150d7a8"
 dependencies = [
  "cocoa",
  "core-graphics",
@@ -1738,7 +1738,7 @@ dependencies = [
  "once_cell",
  "png",
  "thiserror",
- "windows-sys",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -1909,6 +1909,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75283be5efb2831d37ea142365f009c02ec203cd29a3ebecbc093d52315b66d0"
 dependencies = [
  "windows-targets 0.42.2",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.48.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
+dependencies = [
+ "windows-targets 0.48.0",
 ]
 
 [[package]]

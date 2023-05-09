@@ -157,9 +157,10 @@ pub fn auto_launch() -> AutoLaunch {
     let app_name = env!("CARGO_PKG_NAME");
     let app_path = get_current_exe_path();
     // let app_path = std::path::Path::new("/Applications").join(format!("{}.app", app_name));
+    println!("app_name: {:?}", app_name);
     println!("app_path: {:?}", app_path);
     let args = &["--minimized", "--hidden"];
-    AutoLaunch::new(app_name, app_path.to_str().unwrap(), true, args)
+    AutoLaunch::new(app_name, app_path.to_str().unwrap(), false, args)
 }
 
 pub fn check_full_disk_access() {

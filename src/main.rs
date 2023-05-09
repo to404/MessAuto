@@ -9,8 +9,6 @@ use MessAuto::{
     get_sys_locale, read_config, Config, TrayIcon, TrayMenu, TrayMenuItems,
 };
 fn main() {
-    println!("{:?}", get_current_exe_path());
-
     let locale = get_sys_locale();
     rust_i18n::set_locale(locale);
     check_full_disk_access();
