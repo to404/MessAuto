@@ -4,7 +4,7 @@ use enigo::{Enigo, Key, KeyboardControllable};
 use home::home_dir;
 use macos_accessibility_client::accessibility::application_is_trusted_with_prompt;
 use native_dialog::{MessageDialog, MessageType};
-use regex::Regex;
+use regex_lite::Regex;
 use rust_i18n::t;
 use std::{
     fs,
@@ -119,7 +119,7 @@ pub struct TrayMenu {}
 impl TrayMenu {
     pub fn build(tray_menu_items: &TrayMenuItems) -> Menu {
         let tray_menu = Menu::new();
-        tray_menu.append_items(&[
+        let _ = tray_menu.append_items(&[
             &tray_menu_items.check_auto_paste,
             &tray_menu_items.check_auto_return,
             &PredefinedMenuItem::separator(),
@@ -130,7 +130,8 @@ impl TrayMenu {
                     &tray_menu_items.check_hide_icon_for_now,
                     &tray_menu_items.check_hide_icon_forever,
                 ],
-            ),
+            )
+            .expect("create submenu failed"),
             &tray_menu_items.check_launch_at_login,
             &PredefinedMenuItem::separator(),
             &tray_menu_items.quit_i,
@@ -193,7 +194,7 @@ pub fn check_accessibility() -> bool {
 }
 
 // 检查最新信息是否是验证码类型,并返回关键词来辅助定位验证码
-fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a [&'a str]) -> (bool, &'a str) {
+pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a [&'a str]) -> (bool, &'a str) {
     for flag in flags {
         if stdout.contains(flag) {
             return (true, flag);
@@ -203,18 +204,24 @@ fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a [&'a str]) -> (bool
 }
 
 // 利用正则表达式从信息中提取验证码
-fn get_captchas(stdout: &String) -> Vec<String> {
-    let re = Regex::new(r"[a-zA-Z0-9]{4,7}").unwrap(); // 只提取4-7位数字与字母组合
+pub fn get_captchas(stdout: &String) -> Vec<String> {
+    let re = Regex::new(r"\b[a-zA-Z0-9]{4,7}\b").unwrap(); // 只提取4-7位数字与字母组合
     let stdout_str = stdout.as_str();
     let mut captcha_vec = Vec::new();
     for m in re.find_iter(stdout_str) {
-        captcha_vec.push(m.as_str().to_string());
+        println!("find captcha: {}", m.as_str());
+        for i in m.as_str().chars() {
+            if i.is_digit(10) {
+                captcha_vec.push(m.as_str().to_string());
+                break;
+            }
+        }
     }
     return captcha_vec;
 }
 
 // 如果检测到 chat.db 有变动，则提取最近一分钟内最新的一条信息
-fn get_message_in_one_minute() -> String {
+pub fn get_message_in_one_minute() -> String {
     let output = Command::new("sqlite3")
                                 .arg(home_dir().expect("获取用户目录失败").join("Library/Messages/chat.db"))
                                 .arg("SELECT text FROM message WHERE datetime(date/1000000000 + 978307200,\"unixepoch\",\"localtime\") > datetime(\"now\",\"localtime\",\"-60 second\") ORDER BY date DESC LIMIT 1;")
@@ -225,40 +232,24 @@ fn get_message_in_one_minute() -> String {
 }
 
 // 如果信息中包含多个4-7位数字与字母组合（比如公司名称和验证码都是4-7位英文数字组合，例如CSDN）
-// 则选取距离触发词最近的那个匹配到的字符串
-fn get_real_captcha(captchas: Vec<String>, keyword: &str, stdout: &String) -> String {
-    let result = find_string_with_most_digits(&captchas);
-    if result.chars().filter(|c| c.is_digit(10)).count() == 0 {
-        let keyword_location = stdout.find(keyword).unwrap() as i32;
-        let mut min_distance = stdout.len() as i32;
-        let mut real_captcha = String::new();
-        for captcha in captchas {
-            let captcha_location = stdout.find(&captcha).unwrap();
-            let distance = (captcha_location as i32 - keyword_location as i32).abs();
-            if distance < min_distance {
-                min_distance = distance;
-                real_captcha = captcha;
+// 则选取数字字符个数最多的的那个字串作为验证码
+pub fn get_real_captcha(stdout: &String) -> String {
+    let captchas = get_captchas(stdout);
+    let mut real_captcha = String::new();
+    let mut max_digit_count = 0;
+    for captcha in captchas {
+        let mut digit_count = 0;
+        for i in captcha.chars() {
+            if i.is_digit(10) {
+                digit_count += 1;
             }
         }
-        return real_captcha;
-    } else {
-        result
-    }
-}
-
-pub fn find_string_with_most_digits(v: &Vec<String>) -> String {
-    let mut max_digits = 0;
-    let mut result = String::new();
-
-    for s in v {
-        let digits = s.chars().filter(|c| c.is_digit(10)).count();
-        if digits > max_digits {
-            max_digits = digits;
-            result = s.clone();
+        if digit_count > max_digit_count {
+            max_digit_count = digit_count;
+            real_captcha = captcha;
         }
     }
-
-    result
+    real_captcha
 }
 
 // paste code
@@ -295,7 +286,7 @@ pub fn auto_thread() {
                 if captcha_or_other {
                     let captchas = get_captchas(&stdout);
                     println!("All possible verification codes obtained:{:?}", captchas);
-                    let real_captcha = get_real_captcha(captchas, keyword, &stdout);
+                    let real_captcha = get_real_captcha(&stdout);
                     println!("Select out the real verification code：{:?}", real_captcha);
                     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                     ctx.set_contents(real_captcha.to_owned()).unwrap();

@@ -3,7 +3,7 @@ use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
     platform::macos::EventLoopExtMacOS,
 };
-use tray_icon::{menu::MenuEvent, TrayEvent};
+use tray_icon::{menu::MenuEvent, TrayIconEvent};
 use MessAuto::{
     auto_launch, auto_thread, check_accessibility, check_full_disk_access, get_current_exe_path,
     get_sys_locale, read_config, Config, TrayIcon, TrayMenu, TrayMenuItems,
@@ -32,7 +32,7 @@ fn main() {
     }
 
     let menu_channel = MenuEvent::receiver();
-    let tray_channel = TrayEvent::receiver();
+    let tray_channel = TrayIconEvent::receiver();
 
     event_loop.run(move |_event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
