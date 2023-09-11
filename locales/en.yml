@@ -5,4 +5,6 @@ full-disk-access: The MessAuto's Core functions require full disk access
 hide-icon: Hide icon
 hide-icon-for-now: Hide for now
 hide-icon-forever: Hide forever
+add-flag: Add flag
+config: Config
 quit: Quit

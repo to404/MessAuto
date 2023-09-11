@@ -38,6 +38,7 @@ pub struct Config {
     pub auto_return: bool,
     pub hide_icon_forever: bool,
     pub launch_at_login: bool,
+    pub flags: Vec<String>,
 }
 
 impl Default for Config {
@@ -47,6 +48,13 @@ impl Default for Config {
             auto_return: false,
             hide_icon_forever: false,
             launch_at_login: false,
+            flags: vec![
+                "验证码".to_string(),
+                "verification".to_string(),
+                "code".to_string(),
+                "인증".to_string(),
+                "代码".to_string(),
+            ],
         }
     }
 }
@@ -76,8 +84,15 @@ pub fn read_config() -> Config {
         std::fs::write(config_path(), config_str).unwrap();
     }
     let config_str = std::fs::read_to_string(config_path()).unwrap();
-    let config: Config = serde_json::from_str(&config_str).unwrap();
-    config
+    let config = serde_json::from_str(&config_str);
+    if config.is_err() {
+        let config = Config::default();
+        let config_str = serde_json::to_string(&config).unwrap();
+        std::fs::write(config_path(), config_str).unwrap();
+        return config;
+    } else {
+        return config.unwrap();
+    }
 }
 
 pub struct TrayMenuItems {
@@ -87,6 +102,8 @@ pub struct TrayMenuItems {
     pub check_hide_icon_for_now: MenuItem,
     pub check_hide_icon_forever: MenuItem,
     pub check_launch_at_login: CheckMenuItem,
+    pub add_flag: MenuItem,
+    pub config: MenuItem,
 }
 
 impl TrayMenuItems {
@@ -103,6 +120,8 @@ impl TrayMenuItems {
         let check_hide_icon_forever = MenuItem::new(t!("hide-icon-forever"), true, None);
         let check_launch_at_login =
             CheckMenuItem::new(t!("launch-at-login"), true, config.launch_at_login, None);
+        let add_flag = MenuItem::new(t!("add-flag"), true, None);
+        let config = MenuItem::new(t!("config"), true, None);
         TrayMenuItems {
             quit_i,
             check_auto_paste,
@@ -110,6 +129,8 @@ impl TrayMenuItems {
             check_hide_icon_for_now,
             check_hide_icon_forever,
             check_launch_at_login,
+            add_flag,
+            config,
         }
     }
 }
@@ -133,6 +154,9 @@ impl TrayMenu {
             )
             .expect("create submenu failed"),
             &tray_menu_items.check_launch_at_login,
+            &PredefinedMenuItem::separator(),
+            // &tray_menu_items.add_flag,
+            &tray_menu_items.config,
             &PredefinedMenuItem::separator(),
             &tray_menu_items.quit_i,
         ]);
@@ -194,7 +218,7 @@ pub fn check_accessibility() -> bool {
 }
 
 // 检查最新信息是否是验证码类型,并返回关键词来辅助定位验证码
-pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a [&'a str]) -> (bool, &'a str) {
+pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a Vec<String>) -> (bool, &'a str) {
     for flag in flags {
         if stdout.contains(flag) {
             return (true, flag);
@@ -274,7 +298,7 @@ fn enter(enigo: &mut Enigo) {
 pub fn auto_thread() {
     std::thread::spawn(move || {
         let mut enigo = Enigo::new();
-        let flags = ["验证码", "verification", "code", "인증"]; // Captcha trigger keywords, only the keywords in flags in the captcha will trigger subsequent actions
+        let flags = read_config().flags;
         let check_db_path = home_dir().unwrap().join("Library/Messages/chat.db-wal");
         let mut last_metadata_modified = fs::metadata(&check_db_path).unwrap().modified().unwrap();
         loop {

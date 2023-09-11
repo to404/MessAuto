@@ -5,4 +5,6 @@ full-disk-access: MessAuto的核心功能需要完全磁盘访问权限
 hide-icon: 隐藏图标
 hide-icon-for-now: 暂时隐藏
 hide-icon-forever: 永久隐藏
+add-flag: 添加关键词
+config: 配置
 quit: 退出

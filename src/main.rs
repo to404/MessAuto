@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use tao::platform::macos::ActivationPolicy;
 use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
@@ -5,8 +7,8 @@ use tao::{
 };
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 use MessAuto::{
-    auto_launch, auto_thread, check_accessibility, check_full_disk_access, get_current_exe_path,
-    get_sys_locale, read_config, Config, TrayIcon, TrayMenu, TrayMenuItems,
+    auto_launch, auto_thread, check_accessibility, check_full_disk_access, config_path,
+    get_current_exe_path, get_sys_locale, read_config, Config, TrayIcon, TrayMenu, TrayMenuItems,
 };
 fn main() {
     let locale = get_sys_locale();
@@ -97,6 +99,14 @@ fn main() {
                         tray_menu_items.check_launch_at_login.set_checked(true);
                     }
                 }
+            // } else if event.id == tray_menu_items.add_flag.id() {
+            //     println!("add flag");
+            } else if event.id == tray_menu_items.config.id() {
+                println!("open config");
+                Command::new("open")
+                    .arg(config_path())
+                    .output()
+                    .expect("Failed to open config");
             } else {
                 println!("what have you done?!");
             }
