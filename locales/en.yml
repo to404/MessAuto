@@ -8,3 +8,9 @@ hide-icon-forever: Hide forever
 add-flag: Add flag
 config: Config
 quit: Quit
+unknown-arch: Unknown architecture
+new-version: New version
+new-version-text: A new version of MessAuto is available. Do you want to download it?
+update-failed: Update failed
+update-success: Update success
+update-success-text: Whether to restart the app immediately?

@@ -1,6 +1,7 @@
 use home::home_dir;
 use MessAuto::{
-    check_captcha_or_other, config_path, get_captchas, get_real_captcha, get_sys_locale,
+    check_captcha_or_other, check_for_updates, config_path, get_captchas, get_real_captcha,
+    get_sys_locale,
 };
 
 #[test]
@@ -106,4 +107,14 @@ fn test_get_real_captcha() {
     );
     let result = get_real_captcha(&stdout);
     assert_eq!(result, "134560");
+}
+
+#[test]
+fn test_check_for_updates() {
+    // let need_update = check_for_updates();
+    // assert_eq!(need_update.is_ok(), true);
+
+    let need_update = check_for_updates();
+    println!("error:{:?}", need_update);
+    assert_eq!(need_update.is_ok(), true);
 }

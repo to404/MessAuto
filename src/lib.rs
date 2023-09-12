@@ -6,7 +6,10 @@ use macos_accessibility_client::accessibility::application_is_trusted_with_promp
 use native_dialog::{MessageDialog, MessageType};
 use regex_lite::Regex;
 use rust_i18n::t;
+rust_i18n::i18n!("locales");
 use std::{
+    error::Error,
+    fmt::format,
     fs,
     path::{Component, Path, PathBuf},
     process::Command,
@@ -14,7 +17,7 @@ use std::{
     time::Duration,
 };
 use sys_locale;
-rust_i18n::i18n!("locales");
+
 use serde::{Deserialize, Serialize};
 use tray_icon::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
@@ -340,10 +343,138 @@ pub fn get_current_exe_path() -> PathBuf {
             .unwrap()
             .to_path_buf();
     }
-    // MessageDialog::new()
-    //     .set_type(MessageType::Info)
-    //     .set_title(path.to_str().unwrap())
-    //     .show_confirm()
-    //     .unwrap();
     path
+}
+
+pub fn check_for_updates() -> Result<bool, Box<dyn Error>> {
+    // 通过运行curl命令获取最新版本号
+    let output = Command::new("curl")
+        .arg("https://api.github.com/repos/LeeeSe/MessAuto/releases/latest")
+        .arg("--max-time")
+        .arg("10")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+    // 解析json
+    let v: serde_json::Value = serde_json::from_str(&stdout)?;
+    let latest_version = v["tag_name"].as_str();
+    if latest_version.is_none() {
+        return Err("Tag_name not found".into());
+    }
+    // 获取当前二进制文件的版本号
+    let current_version = env!("CARGO_PKG_VERSION");
+    // 格式化两个版本号,将字符串中的非数字字符去掉,并转换为数字
+    let latest_version = latest_version
+        .unwrap()
+        .chars()
+        .filter(|c| c.is_digit(10))
+        .collect::<String>();
+    let current_version = current_version
+        .chars()
+        .filter(|c| c.is_digit(10))
+        .collect::<String>();
+    // 转换为数字
+    let latest_version = latest_version.parse::<i32>()?;
+    let current_version = current_version.parse::<i32>()?;
+    // 如果最新版本号大于当前版本号,则提示更新
+    if latest_version > current_version {
+        return Ok(true);
+    }
+    Ok(false)
+}
+
+pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
+    // 通过运行curl命令获取最新版本号
+    let output = Command::new("curl")
+        .arg("https://api.github.com/repos/LeeeSe/MessAuto/releases/latest")
+        .arg("--max-time")
+        .arg("10")
+        .output()?;
+    let stdout = String::from_utf8(output.stdout)?;
+    // 解析json
+    let v: serde_json::Value = serde_json::from_str(&stdout)?;
+    let latest_version = v["tag_name"].as_str();
+    if latest_version.is_none() {
+        return Err("Tag_name not found".into());
+    }
+    // 检查本机为arm还是x86
+    let arch = std::env::consts::ARCH;
+    // 根据本机架构选择下载链接
+    match arch {
+        "x86_64" => {
+            let download_url = format!(
+                "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_x86_64.zip",
+                latest_version.unwrap()
+            );
+            let output = Command::new("curl")
+                .arg(download_url)
+                .arg("--max-time")
+                .arg("10")
+                .arg("-L")
+                .arg("-f")
+                .arg("-o")
+                .arg("/tmp/MessAuto.zip")
+                .output()?;
+            if !Path::new("/tmp/MessAuto.zip").exists() {
+                return Err("Download failed".into());
+            }
+        }
+        "aarch64" => {
+            let download_url = format!(
+                "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_aarch64.zip",
+                latest_version.unwrap()
+            );
+            let output = Command::new("curl")
+                .arg(download_url)
+                .arg("--max-time")
+                .arg("10")
+                .arg("-L")
+                .arg("-f")
+                .arg("-o")
+                .arg("/tmp/MessAuto.zip")
+                .output()?;
+            // 如果 /tmp/MessAuto.zip 文件不存在,则下载失败
+            if !Path::new("/tmp/MessAuto.zip").exists() {
+                return Err("Download failed".into());
+            }
+        }
+        _ => {
+            println!("不支持的平台");
+        }
+    }
+    Ok(())
+}
+
+pub fn update_thread(tx: std::sync::mpsc::Sender<bool>) {
+    std::thread::spawn(move || {
+        if check_for_updates().is_ok() {
+            if check_for_updates().unwrap() {
+                println!("检测到新版本");
+                if download_latest_release().is_ok() {
+                    println!("成功下载新版本");
+                    tx.send(true).unwrap();
+                } else {
+                    println!("下载新版本失败，请确保网络可以正常访问 Github");
+                }
+            } else {
+                println!("当前已是最新版本");
+            }
+        } else {
+            println!("检查更新失败，请确保网络可以正常访问 Github");
+        }
+    });
+}
+
+// 将下载好的新版本替换老版本
+pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
+    Command::new("unzip")
+        .arg("-o")
+        .arg("/tmp/MessAuto.zip")
+        .arg("-d")
+        .arg("/tmp/")
+        .output()?;
+    Command::new("cp")
+        .arg("/tmp/MessAuto.app")
+        .arg(get_current_exe_path())
+        .output()?;
+    Ok(())
 }

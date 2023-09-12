@@ -8,7 +8,7 @@
 
 # MessAuto
 
-MessAuto 是一款 macOS 平台 **自动提取** 短信验证码并 **粘贴回车** 的软件，百分百由Rust开发，适用于任何APP，是 [2FHey](https://2fhey.com/) 的免费替代品。
+MessAuto 是一款 macOS 平台自动提取短信验证码到粘贴板的软件，百分百由Rust开发，适用于任何APP，是 [2FHey](https://2fhey.com/) 的免费替代品。
 
 下面展示了在 MessAuto 的辅助下十秒内完成短信登录的过程，点击按钮后只需安心等待5秒左右
 
@@ -31,6 +31,10 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 - 暂时隐藏：暂时隐藏图标，应用重启时图标重现，适合不经常重启 Mac 的用户
 - 永久隐藏：永久隐藏图标，应用重启也不会再显示图标，适合经常重启 Mac 的用户，若需重新显示图标，需要删除 `~/.config/messauto/messauto.json` 文件，并重启应用
 - 登录时启动：不会有控制狂不打开吧
+- 配置：点击后将打开json格式的配置文件，可以在其中自定义关键词
+
+ >关键词: 也叫触发词，当信息中包含如“验证码”等关键词时，程序才会执行一系列后续操作，否则会忽略此条信息
+
 
 <p align="center">
 <img src="images/status_item.png" alt="statesitem.jpg" width=548 style="padding:20px" >
@@ -39,6 +43,15 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 ⚠️注意，ARM64 版本打开时会提示文件损坏，因其需要 Apple 开发者签名才可以正常启动，作者没有 Apple 开发者证书，不过你仍然可以通过一条命令解决问题：
 - 移动 MessAuto.app 到 `/Applications` 文件夹下
 - 终端执行`xattr -cr /Applications/MessAuto.app`
+
+## TODO
+- [x] 优化验证码提取规则
+- [x] 自定义关键词
+- [x] 菜单中增加配置选项
+- [ ] ~~自动删除提取后的验证码短信（没有有效思路）~~
+- [x] 应用内更新
+- [ ] Github Action 自动发布 release
+- [ ] 制作 App 主页
 
 ## 开发初衷
 

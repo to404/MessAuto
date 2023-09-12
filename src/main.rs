@@ -1,5 +1,8 @@
+use native_dialog::MessageDialog;
+use rust_i18n::t;
+rust_i18n::i18n!("locales");
 use std::process::Command;
-
+use std::sync::mpsc;
 use tao::platform::macos::ActivationPolicy;
 use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
@@ -8,19 +11,23 @@ use tao::{
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 use MessAuto::{
     auto_launch, auto_thread, check_accessibility, check_full_disk_access, config_path,
-    get_current_exe_path, get_sys_locale, read_config, Config, TrayIcon, TrayMenu, TrayMenuItems,
+    get_sys_locale, read_config, replace_old_version, update_thread, Config, TrayIcon, TrayMenu,
+    TrayMenuItems,
 };
 fn main() {
     let locale = get_sys_locale();
+    let locale = "en";
     rust_i18n::set_locale(locale);
     check_full_disk_access();
     let mut event_loop = EventLoopBuilder::new().build();
-    // set eventloop policy to hide dock icon
+
     event_loop.set_activation_policy(ActivationPolicy::Accessory);
     let auto = auto_launch();
 
     let mut config: Config = read_config();
     auto_thread();
+    let (tx, rx) = mpsc::channel();
+    update_thread(tx);
 
     let tray_menu_items = TrayMenuItems::build(&config);
     let tray_menu = TrayMenu::build(&tray_menu_items);
@@ -38,7 +45,39 @@ fn main() {
 
     event_loop.run(move |_event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
-
+        if let Ok(msg) = rx.try_recv() {
+            if msg {
+                let yes = MessageDialog::new()
+                    .set_title(&t!("new-version"))
+                    .set_text(&t!("new-version-text"))
+                    .show_alert()
+                    .is_ok();
+                if yes {
+                    match replace_old_version() {
+                        Ok(_) => {
+                            println!("replaced");
+                            let reboot = MessageDialog::new()
+                                .set_title(&t!("update-success"))
+                                .set_text(&t!("update-success-text"))
+                                .show_alert()
+                                .is_ok();
+                            if reboot {
+                                tray_icon.take();
+                                *control_flow = ControlFlow::Exit;
+                            }
+                        }
+                        Err(e) => {
+                            println!("failed to replace: {}", e);
+                            let _ = MessageDialog::new()
+                                .set_title(&t!("update-failed"))
+                                .set_text(&e.to_string())
+                                .show_alert()
+                                .is_ok();
+                        }
+                    }
+                }
+            }
+        }
         if let Ok(event) = menu_channel.try_recv() {
             if event.id == tray_menu_items.quit_i.id() {
                 tray_icon.take();

@@ -8,7 +8,7 @@
 
 # MessAuto
 
-MessAuto is a macOS app that **automatically extracts** and **pastes and enters** SMS verification codes. It is 100% developed with Rust and is suitable for any app. It is a free alternative to [2FHey](https://2fhey.com/).
+MessAuto is a macOS app that automatically extracts SMS verification codes to pasteboard. It is 100% developed with Rust and is suitable for any app. It is a free alternative to [2FHey](https://2fhey.com/).
 
 The following GIF shows the process of completing SMS verification and login within ten seconds with the support of MessAuto. After clicking the button, you only need to wait for about 5 seconds.
 
@@ -41,6 +41,15 @@ After granting permission, you can see the MessAuto icon in the menu bar by rest
 ⚠️ Note that the ARM64 version will prompt a file damage when opened because it needs Apple developer signature to start normally. The author does not have an Apple developer certificate. However, you can still solve the problem through one command:
 - Move MessAuto.app to the `/Applications` folder.
 - Execute `xattr -cr /Applications/MessAuto.app` in Terminal.
+
+## TODO
+- [x] Optimize CAPTCHA extraction rules
+- [x] Customized Keywords
+- [x] Add configuration options to the menu
+- [ ] ~~Automatic deletion of extracted CAPTCHA text messages (no valid ideas)~~
+- [x] In-App Updates
+- [ ] Github Action automated release
+- [ ] Make App Home Page
 
 ## Motivation
 
