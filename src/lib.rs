@@ -283,6 +283,7 @@ pub fn get_real_captcha(stdout: &String) -> String {
 fn paste(enigo: &mut Enigo) {
     check_accessibility();
     // Meta + v 粘贴
+    thread::sleep(Duration::from_millis(100));
     enigo.key_down(Key::Meta);
     thread::sleep(Duration::from_millis(100));
     enigo.key_click(Key::Raw(0x09));
@@ -294,6 +295,7 @@ fn paste(enigo: &mut Enigo) {
 // enter the pasted code
 fn enter(enigo: &mut Enigo) {
     check_accessibility();
+    thread::sleep(Duration::from_millis(100));
     enigo.key_click(Key::Return);
     thread::sleep(Duration::from_millis(100));
 }
