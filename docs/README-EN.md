@@ -33,6 +33,10 @@ After granting permission, you can see the MessAuto icon in the menu bar by rest
 - Hide for now: temporarily hide the icon. The icon will reappear when the app is restarted, suitable for users who do not often restart the Mac.
 - Hide forever: permanently hide the icon. Even if the app is restarted, the icon will not appear again. This is suitable for users who restart Mac frequently. If you need to show the icon again, you need to delete the `~/.config/messauto/messauto.json` file and restart the app.
 - Launch at login: Nobody doesn't open it, right?
+- Configuration: click on it will open a configuration file in json format, in which you can customize the keywords
+
+
+ >Keywords: also called trigger words, when the message contains keywords such as "verification code", the program will perform a series of subsequent operations, otherwise the message will be ignored.
 
 <p align="center">
 <img src="../images/status_item_en.png" alt="statesitem.jpg" width=548 style="padding:20px" >
@@ -48,6 +52,7 @@ After granting permission, you can see the MessAuto icon in the menu bar by rest
 - [x] Add configuration options to the menu
 - [ ] ~~Automatic deletion of extracted CAPTCHA text messages (no valid ideas)~~
 - [x] In-App Updates
+- [ ] Add log
 - [ ] Github Action automated release
 - [ ] Make App Home Page
 
