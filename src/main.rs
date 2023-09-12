@@ -16,7 +16,6 @@ use MessAuto::{
 };
 fn main() {
     let locale = get_sys_locale();
-    let locale = "en";
     rust_i18n::set_locale(locale);
     check_full_disk_access();
     let mut event_loop = EventLoopBuilder::new().build();
