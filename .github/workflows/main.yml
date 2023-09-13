@@ -51,8 +51,10 @@ jobs:
 
     - name: Zip binaries
       run: |
-        zip MessAuto_x86_64.zip ./target/release/bundle/osx/MessAuto.app
-        zip MessAuto_aarch64.zip ./target/aarch64-apple-darwin/release/bundle/osx/MessAuto.app
+        cd ./target/release/bundle/osx
+        zip -r ../../../../MessAuto_x86_64.zip MessAuto.app
+        cd ./target/aarch64-apple-darwin/release/bundle/osx
+        zip -r ../../../../../MessAuto_aarch64.zip MessAuto.app
 
     - name: Upload Release Asset x86_64
       uses: actions/upload-release-asset@v1
