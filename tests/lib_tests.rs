@@ -90,9 +90,9 @@ fn test_get_captchas() {
 
 #[test]
 fn test_get_real_captcha() {
-    let stdout = String::from("您的验证码是12345，请勿泄露给他人。");
+    let stdout = String::from("【Microsoft】将123456用作Microsoft账户安全代码");
     let result = get_real_captcha(&stdout);
-    assert_eq!(result, "12345");
+    assert_eq!(result, "123456");
 
     let stdout = String::from("【APPLE】Apple ID代码为：724818。请勿与他人共享。");
     let result = get_real_captcha(&stdout);

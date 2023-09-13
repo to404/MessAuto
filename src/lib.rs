@@ -474,7 +474,10 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
         .arg("-d")
         .arg("/tmp/")
         .output()?;
-    Command::new("cp")
+
+    Command::new("rm").arg("/tmp/MessAuto.zip").output()?;
+
+    Command::new("mv")
         .arg("/tmp/MessAuto.app")
         .arg(get_current_exe_path())
         .output()?;

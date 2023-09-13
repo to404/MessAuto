@@ -49,8 +49,8 @@ fn main() {
                 let yes = MessageDialog::new()
                     .set_title(&t!("new-version"))
                     .set_text(&t!("new-version-text"))
-                    .show_alert()
-                    .is_ok();
+                    .show_confirm()
+                    .unwrap();
                 if yes {
                     match replace_old_version() {
                         Ok(_) => {
@@ -58,8 +58,8 @@ fn main() {
                             let reboot = MessageDialog::new()
                                 .set_title(&t!("update-success"))
                                 .set_text(&t!("update-success-text"))
-                                .show_alert()
-                                .is_ok();
+                                .show_confirm()
+                                .unwrap();
                             if reboot {
                                 tray_icon.take();
                                 *control_flow = ControlFlow::Exit;
@@ -71,7 +71,7 @@ fn main() {
                                 .set_title(&t!("update-failed"))
                                 .set_text(&e.to_string())
                                 .show_alert()
-                                .is_ok();
+                                .unwrap();
                         }
                     }
                 }
@@ -112,13 +112,8 @@ fn main() {
                     config.update();
                 }
             } else if event.id == tray_menu_items.check_auto_return.id() {
-                if tray_menu_items.check_auto_return.is_checked() {
-                    config.auto_return = true;
-                    config.update();
-                } else {
-                    config.auto_return = false;
-                    config.update();
-                }
+                config.auto_return = tray_menu_items.check_auto_return.is_checked();
+                config.update();
             } else if event.id == tray_menu_items.check_launch_at_login.id() {
                 if tray_menu_items.check_launch_at_login.is_checked() {
                     auto.enable().is_ok();
