@@ -17,9 +17,6 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
-          
-    - name: tests
-      run: cargo test
 
     - name: Install dependencies
       run: cargo install cargo-bundle
@@ -32,3 +29,6 @@ jobs:
 
     - name: Bundle for aarch64
       run: cargo bundle --target aarch64-apple-darwin --release
+
+    - name: tests
+      run: cargo test
