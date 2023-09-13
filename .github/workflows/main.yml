@@ -17,9 +17,18 @@ jobs:
           toolchain: stable
           profile: minimal
           override: true
+          
+    - name: tests
+      run: cargo test
 
     - name: Install dependencies
       run: cargo install cargo-bundle
 
-    - name: Bundle
+    - name: Add aarch64 target
+      run: rustup target add aarch64-apple-darwin
+      
+    - name: Bundle for x86_64
       run: cargo bundle --release
+
+    - name: Bundle for aarch64
+      run: cargo bundle --target aarch64-apple-darwin --release
