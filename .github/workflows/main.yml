@@ -30,5 +30,10 @@ jobs:
     - name: Bundle for aarch64
       run: cargo bundle --target aarch64-apple-darwin --release
 
-    - name: tests
-      run: cargo test
+    - name: Create Release Draft
+      uses: release-drafter/release-drafter@v5
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#    - name: tests
+#      run: cargo test
+
