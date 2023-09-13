@@ -52,8 +52,8 @@ After granting permission, you can see the MessAuto icon in the menu bar by rest
 - [x] Add configuration options to the menu
 - [ ] ~~Automatic deletion of extracted CAPTCHA text messages (no valid ideas)~~
 - [x] In-App Updates
+- [x] Github Action automated release
 - [ ] Add log
-- [ ] Github Action automated release
 - [ ] Make App Home Page
 
 ## Motivation
@@ -62,14 +62,13 @@ macOS can conveniently receive short messages from the iPhone without having to 
 
 ## Requirements
 
-- Use a **macOS system** (the author is macOS 13, others can test it by themselves) and can receive **short messages** from an iPhone.
+- Use a **macOS system** and can receive **messages** from an iPhone.
 - Full disk access permission (to access the `chat.db` file in `~/Library/Message.app` to get the latest message.)
 - Accessibility permissions (simulates keyboard operations, auto paste and enter)
 
 ## Known issues
 
 - Some apps or websites do not support Enter login and require manual clicking of login.
-- The pre-compiled version may not work for versions below macOS 13, please [compile it yourself](#Build) 
 
 ## Build
 
