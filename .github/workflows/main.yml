@@ -30,11 +30,23 @@ jobs:
     - name: Bundle for aarch64
       run: cargo bundle --target aarch64-apple-darwin --release
 
-    - name: Create Release Draft
-      uses: release-drafter/release-drafter@v5
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # - name: Create Release Draft
+    # - id: create_release_draft
+    #   uses: release-drafter/release-drafter@v5
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # provided by Actions, do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        draft: false
+        prerelease: true  # set to true if you want the release to be a pre-release
+
     - name: Zip binaries
       run: |
         zip MessAuto_x86_64.zip ./target/release/bundle/osx/MessAuto.app
