@@ -34,6 +34,33 @@ jobs:
       uses: release-drafter/release-drafter@v5
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Zip binaries
+      run: |
+        zip MessAuto_x86_64.zip ./target/release/bundle/osx/MessAuto.app
+        zip MessAuto_aarch64.zip ./target/aarch64-apple-darwin/release/bundle/osx/MessAuto.app
+
+    - name: Upload Release Asset x86_64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above
+          asset_path: MessAuto_x86_64.zip
+          asset_name: MessAuto_x86_64.zip
+          asset_content_type: application/zip
+    
+    - name: Upload Release Asset aarch64
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above
+          asset_path: MessAuto_aarch64.zip
+          asset_name: MessAuto_aarch64.zip
+          asset_content_type: application/zip
+
+
 #    - name: tests
 #      run: cargo test
 
