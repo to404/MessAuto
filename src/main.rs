@@ -1,19 +1,22 @@
-use native_dialog::MessageDialog;
-use rust_i18n::t;
-rust_i18n::i18n!("locales");
 use std::process::Command;
 use std::sync::mpsc;
-use tao::platform::macos::ActivationPolicy;
+
+use native_dialog::MessageDialog;
+use rust_i18n::t;
 use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
     platform::macos::EventLoopExtMacOS,
 };
+use tao::platform::macos::ActivationPolicy;
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
+
 use MessAuto::{
-    auto_launch, auto_thread, check_accessibility, check_full_disk_access, config_path,
-    get_sys_locale, read_config, replace_old_version, update_thread, Config, TrayIcon, TrayMenu,
-    TrayMenuItems,
+    auto_launch, auto_thread, check_accessibility, check_full_disk_access, Config,
+    config_path, get_sys_locale, read_config, replace_old_version, TrayIcon, TrayMenu, TrayMenuItems,
+    update_thread,
 };
+
+rust_i18n::i18n!("locales");
 fn main() {
     let locale = get_sys_locale();
     rust_i18n::set_locale(locale);
@@ -33,9 +36,9 @@ fn main() {
     let mut tray_icon = TrayIcon::build(tray_menu);
 
     if config.hide_icon_forever {
-        tray_icon.as_mut().unwrap().set_visible(false);
+        tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
     } else {
-        tray_icon.as_mut().unwrap().set_visible(true);
+        tray_icon.as_mut().unwrap().set_visible(true).expect("set_visible failed");
     }
 
     let menu_channel = MenuEvent::receiver();
@@ -81,11 +84,11 @@ fn main() {
                 tray_icon.take();
                 *control_flow = ControlFlow::Exit;
             } else if event.id == tray_menu_items.check_hide_icon_for_now.id() {
-                tray_icon.as_mut().unwrap().set_visible(false);
+                tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
             } else if event.id == tray_menu_items.check_hide_icon_forever.id() {
                 config.hide_icon_forever = true;
-                tray_icon.as_mut().unwrap().set_visible(false);
-                config.update();
+                tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
+                config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.check_auto_paste.id() {
                 if tray_menu_items.check_auto_paste.is_checked() {
                     if check_accessibility() {
@@ -96,7 +99,7 @@ fn main() {
                         tray_menu_items
                             .check_auto_return
                             .set_enabled(config.auto_paste);
-                        config.update();
+                        config.update().expect("failed to update config");
                     } else {
                         config.auto_paste = false;
                         tray_menu_items
@@ -108,31 +111,31 @@ fn main() {
                     config.auto_return = false;
                     tray_menu_items.check_auto_return.set_enabled(false);
                     tray_menu_items.check_auto_return.set_checked(false);
-                    config.update();
+                    config.update().expect("failed to update config");
                 }
             } else if event.id == tray_menu_items.check_auto_return.id() {
                 config.auto_return = tray_menu_items.check_auto_return.is_checked();
-                config.update();
+                config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.check_launch_at_login.id() {
                 if tray_menu_items.check_launch_at_login.is_checked() {
-                    auto.enable().is_ok();
+                    auto.enable().expect("failed to enable auto launch");
                     if auto.is_enabled().unwrap() {
                         config.launch_at_login = true;
-                        config.update();
+                        config.update().expect("failed to update config");
                     } else {
                         tray_menu_items.check_launch_at_login.set_checked(false);
                     }
                 } else {
-                    auto.disable().is_ok();
+                    auto.disable().expect("failed to disable auto launch");
                     if !auto.is_enabled().unwrap() {
                         config.launch_at_login = false;
-                        config.update();
+                        config.update().expect("failed to update config");
                     } else {
                         tray_menu_items.check_launch_at_login.set_checked(true);
                     }
                 }
-            // } else if event.id == tray_menu_items.add_flag.id() {
-            //     println!("add flag");
+                // } else if event.id == tray_menu_items.add_flag.id() {
+                //     println!("add flag");
             } else if event.id == tray_menu_items.config.id() {
                 println!("open config");
                 Command::new("open")

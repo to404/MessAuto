@@ -1,3 +1,12 @@
+use std::{
+    error::Error,
+    fs,
+    path::{Path, PathBuf},
+    process::Command,
+    thread,
+    time::Duration,
+};
+
 use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use enigo::{Enigo, Key, KeyboardControllable};
@@ -6,24 +15,14 @@ use macos_accessibility_client::accessibility::application_is_trusted_with_promp
 use native_dialog::{MessageDialog, MessageType};
 use regex_lite::Regex;
 use rust_i18n::t;
-rust_i18n::i18n!("locales");
-use std::{
-    error::Error,
-    fmt::format,
-    fs,
-    path::{Component, Path, PathBuf},
-    process::Command,
-    thread,
-    time::Duration,
-};
-use sys_locale;
-
 use serde::{Deserialize, Serialize};
+use sys_locale;
 use tray_icon::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     TrayIconBuilder,
 };
 
+rust_i18n::i18n!("locales");
 pub fn get_sys_locale() -> &'static str {
     let syslocal = sys_locale::get_locale().unwrap();
     // 只取前两个字符并转换为&str
@@ -155,7 +154,7 @@ impl TrayMenu {
                     &tray_menu_items.check_hide_icon_forever,
                 ],
             )
-            .expect("create submenu failed"),
+                .expect("create submenu failed"),
             &tray_menu_items.check_launch_at_login,
             &PredefinedMenuItem::separator(),
             // &tray_menu_items.add_flag,
@@ -250,10 +249,10 @@ pub fn get_captchas(stdout: &String) -> Vec<String> {
 // 如果检测到 chat.db 有变动，则提取最近一分钟内最新的一条信息
 pub fn get_message_in_one_minute() -> String {
     let output = Command::new("sqlite3")
-                                .arg(home_dir().expect("获取用户目录失败").join("Library/Messages/chat.db"))
-                                .arg("SELECT text FROM message WHERE datetime(date/1000000000 + 978307200,\"unixepoch\",\"localtime\") > datetime(\"now\",\"localtime\",\"-60 second\") ORDER BY date DESC LIMIT 1;")
-                                .output()
-                                .expect("sqlite命令运行失败");
+        .arg(home_dir().expect("获取用户目录失败").join("Library/Messages/chat.db"))
+        .arg("SELECT text FROM message WHERE datetime(date/1000000000 + 978307200,\"unixepoch\",\"localtime\") > datetime(\"now\",\"localtime\",\"-60 second\") ORDER BY date DESC LIMIT 1;")
+        .output()
+        .expect("sqlite命令运行失败");
     let stdout = String::from_utf8(output.stdout).unwrap();
     return stdout;
 }
@@ -311,7 +310,7 @@ pub fn auto_thread() {
             if now_metadata != last_metadata_modified {
                 last_metadata_modified = now_metadata;
                 let stdout = get_message_in_one_minute();
-                let (captcha_or_other, keyword) = check_captcha_or_other(&stdout, &flags);
+                let (captcha_or_other, _keyword) = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
                     let captchas = get_captchas(&stdout);
                     println!("All possible verification codes obtained:{:?}", captchas);
@@ -407,7 +406,7 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_x86_64.zip",
                 latest_version.unwrap()
             );
-            let output = Command::new("curl")
+            Command::new("curl")
                 .arg(download_url)
                 .arg("--max-time")
                 .arg("10")
@@ -425,7 +424,7 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_aarch64.zip",
                 latest_version.unwrap()
             );
-            let output = Command::new("curl")
+            Command::new("curl")
                 .arg(download_url)
                 .arg("--max-time")
                 .arg("10")
