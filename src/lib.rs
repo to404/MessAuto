@@ -166,7 +166,7 @@ impl TrayMenu {
                     &tray_menu_items.check_hide_icon_forever,
                 ],
             )
-                .expect("create submenu failed"),
+            .expect("create submenu failed"),
             &tray_menu_items.check_launch_at_login,
             &PredefinedMenuItem::separator(),
             // &tray_menu_items.add_flag,

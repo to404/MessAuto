@@ -51,7 +51,7 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 - [ ] ~~自动删除提取后的验证码短信（没有有效思路）~~
 - [x] 应用内更新
 - [x] Github Action 自动发布 release
-- [ ] 增加日志功能
+- [x] 增加日志功能
 - [ ] 制作 App 主页
 
 ## 开发初衷
@@ -78,3 +78,8 @@ macOS 平台可以方便地接收来自 iPhone 的短信，无需每次打开手
 ## 感谢
 
 * 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路
+
+## 日志目录
+
+日志文件目录：`~/.config/messauto/messauto.log`
+仅保留最近一次启动软件的日志

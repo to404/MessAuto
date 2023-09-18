@@ -53,7 +53,7 @@ After granting permission, you can see the MessAuto icon in the menu bar by rest
 - [ ] ~~Automatic deletion of extracted CAPTCHA text messages (no valid ideas)~~
 - [x] In-App Updates
 - [x] Github Action automated release
-- [ ] Add log
+- [x] Add log
 - [ ] Make App Home Page
 
 ## Motivation
@@ -80,3 +80,7 @@ macOS can conveniently receive short messages from the iPhone without having to 
 ## Thanks
 
 * Thanks to [@尚善若拙](https://sspai.com/post/73072) for providing ideas for obtaining SMS.
+
+## Log directory
+Log file directory: `~/.config/messauto/messauto.log`
+Keep only the log of the most recent startup of the software
