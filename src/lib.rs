@@ -11,6 +11,7 @@ use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use enigo::{Enigo, Key, KeyboardControllable};
 use home::home_dir;
+use log::{error, info, warn};
 use macos_accessibility_client::accessibility::application_is_trusted_with_prompt;
 use native_dialog::{MessageDialog, MessageType};
 use regex_lite::Regex;
@@ -35,7 +36,7 @@ pub fn get_sys_locale() -> &'static str {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct Config {
+pub struct MAConfig {
     pub auto_paste: bool,
     pub auto_return: bool,
     pub hide_icon_forever: bool,
@@ -43,9 +44,9 @@ pub struct Config {
     pub flags: Vec<String>,
 }
 
-impl Default for Config {
+impl Default for MAConfig {
     fn default() -> Self {
-        Config {
+        MAConfig {
             auto_paste: false,
             auto_return: false,
             hide_icon_forever: false,
@@ -61,7 +62,7 @@ impl Default for Config {
     }
 }
 
-impl Config {
+impl MAConfig {
     // update the local config "~/.config/messauto/messauto.json"
     pub fn update(&self) -> Result<(), Box<dyn std::error::Error>> {
         let updated_config_str = serde_json::to_string(&self)?;
@@ -78,9 +79,20 @@ pub fn config_path() -> std::path::PathBuf {
     config_path
 }
 
-pub fn read_config() -> Config {
+pub fn log_path() -> std::path::PathBuf {
+    let mut log_path = home_dir().unwrap();
+    log_path.push(".config");
+    log_path.push("messauto");
+    log_path.push("messauto.log");
+    if !log_path.exists() {
+        std::fs::create_dir_all(log_path.parent().unwrap()).unwrap();
+    }
+    log_path
+}
+
+pub fn read_config() -> MAConfig {
     if !config_path().exists() {
-        let config = Config::default();
+        let config = MAConfig::default();
         let config_str = serde_json::to_string(&config).unwrap();
         std::fs::create_dir_all(config_path().parent().unwrap()).unwrap();
         std::fs::write(config_path(), config_str).unwrap();
@@ -88,7 +100,7 @@ pub fn read_config() -> Config {
     let config_str = std::fs::read_to_string(config_path()).unwrap();
     let config = serde_json::from_str(&config_str);
     if config.is_err() {
-        let config = Config::default();
+        let config = MAConfig::default();
         let config_str = serde_json::to_string(&config).unwrap();
         std::fs::write(config_path(), config_str).unwrap();
         return config;
@@ -109,7 +121,7 @@ pub struct TrayMenuItems {
 }
 
 impl TrayMenuItems {
-    pub fn build(config: &Config) -> Self {
+    pub fn build(config: &MAConfig) -> Self {
         let quit_i = MenuItem::new(t!("quit"), true, None);
         let check_auto_paste = CheckMenuItem::new(t!("auto-paste"), true, config.auto_paste, None);
         let check_auto_return = CheckMenuItem::new(
@@ -183,9 +195,6 @@ impl TrayIcon {
 pub fn auto_launch() -> AutoLaunch {
     let app_name = env!("CARGO_PKG_NAME");
     let app_path = get_current_exe_path();
-    // let app_path = std::path::Path::new("/Applications").join(format!("{}.app", app_name));
-    println!("app_name: {:?}", app_name);
-    println!("app_path: {:?}", app_path);
     let args = &["--minimized", "--hidden"];
     AutoLaunch::new(app_name, app_path.to_str().unwrap(), false, args)
 }
@@ -198,6 +207,7 @@ pub fn check_full_disk_access() {
     let ct = std::fs::read_dir(check_db_path);
     match ct {
         Err(_) => {
+            warn!("访问受阻：没有完全磁盘访问权限");
             let yes = MessageDialog::new()
                 .set_type(MessageType::Info)
                 .set_title(t!("full-disk-access").as_str())
@@ -209,6 +219,7 @@ pub fn check_full_disk_access() {
                     .output()
                     .expect("Failed to open Disk Access Preferences window");
             }
+            warn!("已弹出窗口提醒用户授权，软件将关闭等待用户重启");
             panic!("exit without full disk access");
         }
         _ => {}
@@ -235,7 +246,6 @@ pub fn get_captchas(stdout: &String) -> Vec<String> {
     let stdout_str = stdout.as_str();
     let mut captcha_vec = Vec::new();
     for m in re.find_iter(stdout_str) {
-        println!("find captcha: {}", m.as_str());
         for i in m.as_str().chars() {
             if i.is_digit(10) {
                 captcha_vec.push(m.as_str().to_string());
@@ -312,17 +322,20 @@ pub fn auto_thread() {
                 let stdout = get_message_in_one_minute();
                 let (captcha_or_other, _keyword) = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
+                    info!("检测到新的验证码类型信息：{:?}", stdout);
                     let captchas = get_captchas(&stdout);
-                    println!("All possible verification codes obtained:{:?}", captchas);
+                    info!("所有可能的验证码为:{:?}", captchas);
                     let real_captcha = get_real_captcha(&stdout);
-                    println!("Select out the real verification code：{:?}", real_captcha);
+                    info!("提取到真正的验证码:{:?}", real_captcha);
                     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                     ctx.set_contents(real_captcha.to_owned()).unwrap();
                     let config = read_config();
                     if config.auto_paste {
                         paste(&mut enigo);
+                        info!("粘贴验证码");
                         if config.auto_return {
                             enter(&mut enigo);
+                            info!("执行回车");
                         }
                     }
                 }
@@ -415,9 +428,6 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 .arg("-o")
                 .arg("/tmp/MessAuto.zip")
                 .output()?;
-            if !Path::new("/tmp/MessAuto.zip").exists() {
-                return Err("Download failed".into());
-            }
         }
         "aarch64" => {
             let download_url = format!(
@@ -433,14 +443,16 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 .arg("-o")
                 .arg("/tmp/MessAuto.zip")
                 .output()?;
-            // 如果 /tmp/MessAuto.zip 文件不存在,则下载失败
-            if !Path::new("/tmp/MessAuto.zip").exists() {
-                return Err("Download failed".into());
-            }
         }
         _ => {
-            println!("不支持的平台");
+            error!("不支持的平台");
         }
+    }
+    if !Path::new("/tmp/MessAuto.zip").exists() {
+        warn!("新版本下载失败");
+        return Err("Download failed".into());
+    } else {
+        info!("新版本下载成功");
     }
     Ok(())
 }
@@ -449,18 +461,15 @@ pub fn update_thread(tx: std::sync::mpsc::Sender<bool>) {
     std::thread::spawn(move || {
         if check_for_updates().is_ok() {
             if check_for_updates().unwrap() {
-                println!("检测到新版本");
+                info!("检测到新版本");
                 if download_latest_release().is_ok() {
-                    println!("成功下载新版本");
                     tx.send(true).unwrap();
-                } else {
-                    println!("下载新版本失败，请确保网络可以正常访问 Github");
                 }
             } else {
-                println!("当前已是最新版本");
+                info!("当前已是最新版本");
             }
         } else {
-            println!("检查更新失败，请确保网络可以正常访问 Github");
+            warn!("检查更新失败，请确保网络可以正常访问 Github 及其相关 API");
         }
     });
 }

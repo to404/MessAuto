@@ -1,8 +1,12 @@
+use std::env::current_exe;
+use std::fs::File;
 use std::process::Command;
 use std::sync::mpsc;
 
+use log::{info, trace, warn};
 use native_dialog::MessageDialog;
 use rust_i18n::t;
+use simplelog::{ColorChoice, CombinedLogger, Config, LevelFilter, TerminalMode, TermLogger, WriteLogger};
 use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
     platform::macos::EventLoopExtMacOS,
@@ -10,23 +14,28 @@ use tao::{
 use tao::platform::macos::ActivationPolicy;
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 
-use MessAuto::{
-    auto_launch, auto_thread, check_accessibility, check_full_disk_access, Config,
-    config_path, get_sys_locale, read_config, replace_old_version, TrayIcon, TrayMenu, TrayMenuItems,
-    update_thread,
-};
+use MessAuto::{auto_launch, auto_thread, check_accessibility, check_full_disk_access, config_path, get_sys_locale, log_path, read_config, replace_old_version, TrayIcon, TrayMenu, TrayMenuItems, update_thread};
 
 rust_i18n::i18n!("locales");
 fn main() {
+    CombinedLogger::init(
+        vec![
+            TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+            WriteLogger::new(LevelFilter::Info, Config::default(), File::create(log_path()).unwrap()),
+        ]
+    ).unwrap();
+    info!("日志初始化完成");
     let locale = get_sys_locale();
+    info!("检测到并设置App语言为：{}", locale);
     rust_i18n::set_locale(locale);
     check_full_disk_access();
+    info!("成功获取磁盘访问权限");
     let mut event_loop = EventLoopBuilder::new().build();
 
     event_loop.set_activation_policy(ActivationPolicy::Accessory);
     let auto = auto_launch();
 
-    let mut config: Config = read_config();
+    let mut config = read_config();
     auto_thread();
     let (tx, rx) = mpsc::channel();
     update_thread(tx);
@@ -56,7 +65,7 @@ fn main() {
                 if yes {
                     match replace_old_version() {
                         Ok(_) => {
-                            println!("replaced");
+                            info!("二进制文件替换成功");
                             let reboot = MessageDialog::new()
                                 .set_title(&t!("update-success"))
                                 .set_text(&t!("update-success-text"))
@@ -65,10 +74,14 @@ fn main() {
                             if reboot {
                                 tray_icon.take();
                                 *control_flow = ControlFlow::Exit;
+                                Command::new("open")
+                                    .arg(current_exe().unwrap())
+                                    .output()
+                                    .expect("Failed to open MessAuto");
                             }
                         }
                         Err(e) => {
-                            println!("failed to replace: {}", e);
+                            warn!("二进制文件替换失败: {}", e);
                             let _ = MessageDialog::new()
                                 .set_title(&t!("update-failed"))
                                 .set_text(&e.to_string())
@@ -120,9 +133,11 @@ fn main() {
                 if tray_menu_items.check_launch_at_login.is_checked() {
                     auto.enable().expect("failed to enable auto launch");
                     if auto.is_enabled().unwrap() {
+                        info!("设置开机自启");
                         config.launch_at_login = true;
                         config.update().expect("failed to update config");
                     } else {
+                        info!("关闭开机自启");
                         tray_menu_items.check_launch_at_login.set_checked(false);
                     }
                 } else {
@@ -137,17 +152,16 @@ fn main() {
                 // } else if event.id == tray_menu_items.add_flag.id() {
                 //     println!("add flag");
             } else if event.id == tray_menu_items.config.id() {
-                println!("open config");
                 Command::new("open")
                     .arg(config_path())
                     .output()
                     .expect("Failed to open config");
             } else {
-                println!("what have you done?!");
+                warn!("未知操作");
             }
         }
         if let Ok(event) = tray_channel.try_recv() {
-            println!("{event:?}");
+            trace!("{event:?}");
         }
     });
 }
