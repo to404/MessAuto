@@ -32,27 +32,23 @@ fn test_check_captcha_or_other() {
         "인증".to_string(),
         "代码".to_string(),
     ];
-    let (result, flag) = check_captcha_or_other(&stdout, &flags);
+    let result = check_captcha_or_other(&stdout, &flags);
     assert_eq!(result, true);
-    assert_eq!(flag, "验证码");
 
     // Test that the function returns true and the correct flag when the stdout contains a flag
     let stdout =
         "【腾讯云】尊敬的腾讯云用户，您的账号（账号 ID：100022305033，昵称：724818342@qq.com）下有 1 个域名即将到期：xjp.asia 将于北京时间 2023-11-01 到期。域名过期三天后仍未续费，将会停止正常解析，为避免影响您的业务正常使用，请及时登录腾讯云进行续费：https://mc.tencent.com/N1op7G3l，详情可查看邮件或站内信。。".to_string();
-    let (result, flag) = check_captcha_or_other(&stdout, &flags);
+    let result = check_captcha_or_other(&stdout, &flags);
     assert_eq!(result, false);
-    assert_eq!(flag, "");
 
     // Test that the function returns true and the correct flag when the stdout contains multiple flags
     let stdout = "【AIdea】您的验证码为：282443，请勿泄露于他人！".to_string();
-    let (result, flag) = check_captcha_or_other(&stdout, &flags);
+    let result = check_captcha_or_other(&stdout, &flags);
     assert_eq!(result, true);
-    assert_eq!(flag, "验证码");
 
     let stdout = "【Microsoft】将 12345X 初始化Microsoft账户安全代码".to_string();
-    let (result, flag) = check_captcha_or_other(&stdout, &flags);
+    let result = check_captcha_or_other(&stdout, &flags);
     assert_eq!(result, true);
-    assert_eq!(flag, "代码");
 }
 
 #[test]

@@ -6,14 +6,23 @@ use std::{
     thread,
     time::Duration,
 };
+use std::io::Read;
+use std::thread::sleep;
 
 use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
+use emlx::parse_emlx;
 use enigo::{Enigo, Key, KeyboardControllable};
+use futures::{
+    channel::mpsc::{channel, Receiver},
+    SinkExt, StreamExt,
+};
 use home::home_dir;
 use log::{error, info, warn};
 use macos_accessibility_client::accessibility::application_is_trusted_with_prompt;
+use mail_parser::MessageParser;
 use native_dialog::{MessageDialog, MessageType};
+use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
@@ -42,6 +51,7 @@ pub struct MAConfig {
     pub hide_icon_forever: bool,
     pub launch_at_login: bool,
     pub flags: Vec<String>,
+    pub listening_to_mail: bool,
 }
 
 impl Default for MAConfig {
@@ -58,6 +68,7 @@ impl Default for MAConfig {
                 "인증".to_string(),
                 "代码".to_string(),
             ],
+            listening_to_mail: false,
         }
     }
 }
@@ -117,7 +128,8 @@ pub struct TrayMenuItems {
     pub check_hide_icon_forever: MenuItem,
     pub check_launch_at_login: CheckMenuItem,
     pub add_flag: MenuItem,
-    pub config: MenuItem,
+    pub maconfig: MenuItem,
+    pub listening_to_mail: CheckMenuItem,
 }
 
 impl TrayMenuItems {
@@ -135,7 +147,13 @@ impl TrayMenuItems {
         let check_launch_at_login =
             CheckMenuItem::new(t!("launch-at-login"), true, config.launch_at_login, None);
         let add_flag = MenuItem::new(t!("add-flag"), true, None);
-        let config = MenuItem::new(t!("config"), true, None);
+        let maconfig = MenuItem::new(t!("config"), true, None);
+        let listening_to_mail = CheckMenuItem::new(
+            t!("listening-to-mail"),
+            true,
+            config.listening_to_mail,
+            None,
+        );
         TrayMenuItems {
             quit_i,
             check_auto_paste,
@@ -144,7 +162,8 @@ impl TrayMenuItems {
             check_hide_icon_forever,
             check_launch_at_login,
             add_flag,
-            config,
+            maconfig,
+            listening_to_mail,
         }
     }
 }
@@ -166,11 +185,13 @@ impl TrayMenu {
                     &tray_menu_items.check_hide_icon_forever,
                 ],
             )
-            .expect("create submenu failed"),
+                .expect("create submenu failed"),
             &tray_menu_items.check_launch_at_login,
             &PredefinedMenuItem::separator(),
             // &tray_menu_items.add_flag,
-            &tray_menu_items.config,
+            &tray_menu_items.maconfig,
+            &PredefinedMenuItem::separator(),
+            &tray_menu_items.listening_to_mail,
             &PredefinedMenuItem::separator(),
             &tray_menu_items.quit_i,
         ]);
@@ -231,13 +252,13 @@ pub fn check_accessibility() -> bool {
 }
 
 // 检查最新信息是否是验证码类型,并返回关键词来辅助定位验证码
-pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a Vec<String>) -> (bool, &'a str) {
+pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a Vec<String>) -> bool {
     for flag in flags {
         if stdout.contains(flag) {
-            return (true, flag);
+            return true;
         }
     }
-    (false, "")
+    false
 }
 
 // 利用正则表达式从信息中提取验证码
@@ -309,7 +330,7 @@ fn enter(enigo: &mut Enigo) {
     thread::sleep(Duration::from_millis(100));
 }
 
-pub fn auto_thread() {
+pub fn messages_thread() {
     std::thread::spawn(move || {
         let mut enigo = Enigo::new();
         let flags = read_config().flags;
@@ -320,7 +341,7 @@ pub fn auto_thread() {
             if now_metadata != last_metadata_modified {
                 last_metadata_modified = now_metadata;
                 let stdout = get_message_in_one_minute();
-                let (captcha_or_other, _keyword) = check_captcha_or_other(&stdout, &flags);
+                let captcha_or_other = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
                     info!("检测到新的验证码类型信息：{:?}", stdout);
                     let captchas = get_captchas(&stdout);
@@ -490,4 +511,102 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
         .arg(get_current_exe_path())
         .output()?;
     Ok(())
+}
+
+
+pub fn mail_thread() {
+    std::thread::spawn(move || {
+        let mail_path = home_dir().unwrap().join("Library/Mail");
+        let path = String::from(mail_path.to_str().unwrap());
+
+        futures::executor::block_on(async {
+            if let Err(e) = async_watch(path).await {
+                error!("error: {:?}", e)
+            }
+        });
+    });
+}
+
+fn async_watcher() -> notify::Result<(RecommendedWatcher, Receiver<notify::Result<Event>>)> {
+    let (mut tx, rx) = channel(1);
+
+    let watcher = RecommendedWatcher::new(
+        move |res| {
+            futures::executor::block_on(async {
+                tx.send(res).await.unwrap();
+            })
+        },
+        Config::default(),
+    )?;
+
+    Ok((watcher, rx))
+}
+
+async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
+    let (mut watcher, mut rx) = async_watcher()?;
+
+    // Add a path to be watched. All files and directories at that path and
+    // below will be monitored for changes.
+    watcher.watch(path.as_ref(), RecursiveMode::Recursive)?;
+
+    while let Some(res) = rx.next().await {
+        match res {
+            Ok(event) => {
+                match event.kind {
+                    notify::event::EventKind::Create(_) => {
+                        for path in event.paths {
+                            let path = path.to_string_lossy();
+                            if path.contains(".emlx") && path.contains("INBOX.mbox") {
+                                info!("收到新邮件: {:?}", path);
+                                let path = path.replace(".tmp", "");
+                                let content = read_emlx(&path);
+                                info!("len: {}", content.len());
+                                info!("邮件内容：{:?}", content);
+                                if content.len() < 500 {
+                                    let is_captcha = check_captcha_or_other(&content, &read_config().flags);
+                                    if is_captcha {
+                                        info!("检测到新的验证码类型邮件：{:?}", content);
+                                        let captchas = get_captchas(&content);
+                                        info!("所有可能的验证码为:{:?}", captchas);
+                                        let real_captcha = get_real_captcha(&content);
+                                        info!("提取到真正的验证码:{:?}", real_captcha);
+                                        let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                        ctx.set_contents(real_captcha.to_owned()).unwrap();
+                                        let config = read_config();
+                                        if config.auto_paste {
+                                            let mut enigo = Enigo::new();
+                                            paste(&mut enigo);
+                                            info!("粘贴验证码");
+                                            if config.auto_return {
+                                                enter(&mut enigo);
+                                                info!("执行回车");
+                                            }
+                                        }
+                                    }
+                                }
+                                sleep(std::time::Duration::from_secs(2));
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Err(e) => error!("watch error: {:?}", e),
+        }
+    }
+    Ok(())
+}
+
+fn read_emlx<'x>(path: &str) -> String {
+    let mut file = std::fs::File::open(path).unwrap();
+    let mut buffer = Vec::new();
+
+    file.read_to_end(&mut buffer).unwrap();
+
+    let parsed = parse_emlx(&buffer).unwrap();
+
+    let message = std::str::from_utf8(parsed.message).unwrap();
+    let message = MessageParser::default().parse(message).unwrap();
+
+    message.body_text(0).unwrap().to_owned().to_string()
 }

@@ -1,8 +1,8 @@
 [package]
 name = "MessAuto"
-version = "0.4.0"
+version = "0.5.0"
 edition = "2021"
-description = "Automatic extraction of SMS verification code for Mac platform."
+description = "Automatic extraction of Email and SMS verification code for Mac platform."
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -22,6 +22,10 @@ clipboard = "0.5.0"
 regex-lite = "0.1.0"
 log = { version = "0.4.20", features = [] }
 simplelog = "0.12.1"
+notify = "6.1.1"
+futures = "0.3.28"
+emlx = "0.1.0"
+mail-parser = "0.9.1"
 
 [package.metadata.i18n]
 available-locales = ["en", "zh-CN"]

@@ -6,24 +6,38 @@ use std::sync::mpsc;
 use log::{info, trace, warn};
 use native_dialog::MessageDialog;
 use rust_i18n::t;
-use simplelog::{ColorChoice, CombinedLogger, Config, LevelFilter, TerminalMode, TermLogger, WriteLogger};
+use simplelog::{
+    ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
+};
+use tao::platform::macos::ActivationPolicy;
 use tao::{
     event_loop::{ControlFlow, EventLoopBuilder},
     platform::macos::EventLoopExtMacOS,
 };
-use tao::platform::macos::ActivationPolicy;
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 
-use MessAuto::{auto_launch, auto_thread, check_accessibility, check_full_disk_access, config_path, get_sys_locale, log_path, read_config, replace_old_version, TrayIcon, TrayMenu, TrayMenuItems, update_thread};
+use MessAuto::{
+    auto_launch, check_accessibility, check_full_disk_access, config_path, get_sys_locale,
+    log_path, mail_thread, messages_thread, read_config, replace_old_version, update_thread,
+    TrayIcon, TrayMenu, TrayMenuItems,
+};
 
 rust_i18n::i18n!("locales");
 fn main() {
-    CombinedLogger::init(
-        vec![
-            TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-            WriteLogger::new(LevelFilter::Info, Config::default(), File::create(log_path()).unwrap()),
-        ]
-    ).unwrap();
+    CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
+        WriteLogger::new(
+            LevelFilter::Info,
+            Config::default(),
+            File::create(log_path()).unwrap(),
+        ),
+    ])
+    .unwrap();
     info!("日志初始化完成");
     let locale = get_sys_locale();
     info!("检测到并设置App语言为：{}", locale);
@@ -36,7 +50,10 @@ fn main() {
     let auto = auto_launch();
 
     let mut config = read_config();
-    auto_thread();
+    messages_thread();
+    if config.listening_to_mail {
+        mail_thread();
+    }
     let (tx, rx) = mpsc::channel();
     update_thread(tx);
 
@@ -45,9 +62,17 @@ fn main() {
     let mut tray_icon = TrayIcon::build(tray_menu);
 
     if config.hide_icon_forever {
-        tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
+        tray_icon
+            .as_mut()
+            .unwrap()
+            .set_visible(false)
+            .expect("set_visible failed");
     } else {
-        tray_icon.as_mut().unwrap().set_visible(true).expect("set_visible failed");
+        tray_icon
+            .as_mut()
+            .unwrap()
+            .set_visible(true)
+            .expect("set_visible failed");
     }
 
     let menu_channel = MenuEvent::receiver();
@@ -97,10 +122,18 @@ fn main() {
                 tray_icon.take();
                 *control_flow = ControlFlow::Exit;
             } else if event.id == tray_menu_items.check_hide_icon_for_now.id() {
-                tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
+                tray_icon
+                    .as_mut()
+                    .unwrap()
+                    .set_visible(false)
+                    .expect("set_visible failed");
             } else if event.id == tray_menu_items.check_hide_icon_forever.id() {
                 config.hide_icon_forever = true;
-                tray_icon.as_mut().unwrap().set_visible(false).expect("set_visible failed");
+                tray_icon
+                    .as_mut()
+                    .unwrap()
+                    .set_visible(false)
+                    .expect("set_visible failed");
                 config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.check_auto_paste.id() {
                 if tray_menu_items.check_auto_paste.is_checked() {
@@ -151,11 +184,22 @@ fn main() {
                 }
                 // } else if event.id == tray_menu_items.add_flag.id() {
                 //     println!("add flag");
-            } else if event.id == tray_menu_items.config.id() {
+            } else if event.id == tray_menu_items.maconfig.id() {
                 Command::new("open")
                     .arg(config_path())
                     .output()
                     .expect("Failed to open config");
+            } else if event.id == tray_menu_items.listening_to_mail.id() {
+                if tray_menu_items.listening_to_mail.is_checked() {
+                    config.listening_to_mail = true;
+                    config.update().expect("failed to update config");
+                    mail_thread();
+                    info!("邮件监听开启");
+                } else {
+                    config.listening_to_mail = false;
+                    config.update().expect("failed to update config");
+                    info!("邮件监听关闭");
+                }
             } else {
                 warn!("未知操作");
             }

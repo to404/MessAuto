@@ -14,3 +14,4 @@ new-version-text: A new version of MessAuto is available. Do you want to downloa
 update-failed: Update failed
 update-success: Update success
 update-success-text: Whether to restart the app immediately?
+listening-to-mail: Listen email

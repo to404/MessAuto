@@ -14,3 +14,4 @@ new-version-text: MessAuto 有新版本可用，需要现在下载吗？
 update-failed: 更新失败
 update-success: 更新成功
 update-success-text: 是否立即重启应用？
+listening-to-mail: 监听邮件
