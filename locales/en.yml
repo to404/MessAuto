@@ -15,3 +15,6 @@ update-failed: Update failed
 update-success: Update success
 update-success-text: Whether to restart the app immediately?
 listening-to-mail: Listen email
+float-window: Float window
+imessage: iMassage
+mail: Mail
