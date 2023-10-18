@@ -60,6 +60,7 @@ pub fn main() {
     let tray_menu_items = TrayMenuItems::build(&config);
     let tray_menu = TrayMenu::build(&tray_menu_items);
     let mut tray_icon = TrayIcon::build(tray_menu);
+    tray_icon.as_mut().unwrap().set_icon_as_template(true);
 
     if config.hide_icon_forever {
         tray_icon
