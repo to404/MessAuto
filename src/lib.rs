@@ -26,6 +26,7 @@ use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use sys_locale;
 use tray_icon::Icon;
 use tray_icon::{
@@ -46,15 +47,32 @@ pub fn get_sys_locale() -> &'static str {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct MAConfig {
+    #[serde(default)]
     pub auto_paste: bool,
+    #[serde(default)]
     pub auto_return: bool,
+    #[serde(default)]
     pub hide_icon_forever: bool,
+    #[serde(default)]
     pub launch_at_login: bool,
+    #[serde(default = "default_flags")]
     pub flags: Vec<String>,
+    #[serde(default)]
     pub listening_to_mail: bool,
+    #[serde(default)]
     pub float_window: bool,
+}
+
+fn default_flags() -> Vec<String> {
+    vec![
+        "验证码".to_string(),
+        "verification".to_string(),
+        "code".to_string(),
+        "인증".to_string(),
+        "代码".to_string(),
+    ]
 }
 
 impl Default for MAConfig {
@@ -64,13 +82,7 @@ impl Default for MAConfig {
             auto_return: false,
             hide_icon_forever: false,
             launch_at_login: false,
-            flags: vec![
-                "验证码".to_string(),
-                "verification".to_string(),
-                "code".to_string(),
-                "인증".to_string(),
-                "代码".to_string(),
-            ],
+            flags: default_flags(),
             listening_to_mail: false,
             float_window: false,
         }
@@ -113,15 +125,9 @@ pub fn read_config() -> MAConfig {
         std::fs::write(config_path(), config_str).unwrap();
     }
     let config_str = std::fs::read_to_string(config_path()).unwrap();
-    let config = serde_json::from_str(&config_str);
-    if config.is_err() {
-        let config = MAConfig::default();
-        let config_str = serde_json::to_string(&config).unwrap();
-        std::fs::write(config_path(), config_str).unwrap();
-        return config;
-    } else {
-        return config.unwrap();
-    }
+    let config: MAConfig = serde_json::from_str(&config_str).unwrap();
+    config.update().unwrap();
+    return config;
 }
 
 pub struct TrayMenuItems {
@@ -219,7 +225,10 @@ pub struct TrayIcon {}
 impl TrayIcon {
     pub fn build(tray_menu: Menu) -> Option<tray_icon::TrayIcon> {
         let bin_path = get_current_exe_path();
-        let icon_path = bin_path.join("Contents/Resources/images/icon.png");
+        let mut icon_path = bin_path.join("Contents/Resources/images/icon.png");
+        if !icon_path.exists() {
+            icon_path = "images/icon.png".into();
+        }
         let icon = load_icon(std::path::Path::new(&icon_path));
         Some(
             TrayIconBuilder::new()
