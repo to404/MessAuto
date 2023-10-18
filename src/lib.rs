@@ -392,7 +392,7 @@ pub fn messages_thread() {
                     ctx.set_contents(real_captcha.to_owned()).unwrap();
                     let config = read_config();
                     if config.float_window {
-                        let child = open_app(real_captcha, t!("imessage").to_string());
+                        let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
                         paste(&mut enigo);
                         info!("粘贴验证码");
@@ -452,6 +452,8 @@ pub fn check_for_updates() -> Result<bool, Box<dyn Error>> {
     // 转换为数字
     let latest_version = latest_version.parse::<i32>()?;
     let current_version = current_version.parse::<i32>()?;
+    info!("最新版本号: {}", latest_version);
+    info!("当前版本号: {}", current_version);
     // 如果最新版本号大于当前版本号,则提示更新
     if latest_version > current_version {
         return Ok(true);
@@ -661,7 +663,7 @@ pub fn open_app(code: String, from_app: String) -> std::process::Child {
 fn start_process(command_args: Vec<String>) -> std::process::Child {
     let current_exe = std::env::current_exe().unwrap();
 
-    let mut child = Command::new(current_exe)
+    let child = Command::new(current_exe)
         .args(&command_args)
         .spawn()
         .unwrap();

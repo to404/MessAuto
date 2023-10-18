@@ -93,11 +93,14 @@ Safari 浏览器上，但并不是每个人都喜欢使用它。为了把这个�
 - `cargo install cargo-bundle`
 - `cargo bundle --release`
 
-## 感谢
-
-* 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路
-
 ## 日志目录
 
 日志文件目录：`~/.config/messauto/messauto.log`
 仅保留最近一次启动软件的日志
+
+## 常见问题
+- 给了权限但还是弹出权限请求：暂时的解决方法是从设置面板的辅助功能和磁盘权限列表中将原来的 MessAuto 通过下面的"-"号移除，当再次弹出权限请求时正常同意即可工作
+
+## 感谢
+
+* 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路
