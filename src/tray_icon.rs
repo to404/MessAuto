@@ -17,9 +17,9 @@ use tao::{
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 
 use MessAuto::{
-    auto_launch, check_accessibility, check_full_disk_access, config_path, get_sys_locale,
-    log_path, mail_thread, messages_thread, read_config, replace_old_version, update_thread,
-    TrayIcon, TrayMenu, TrayMenuItems,
+    auto_launch, check_accessibility, check_full_disk_access, config_path, get_current_exe_path,
+    get_sys_locale, log_path, mail_thread, messages_thread, read_config, replace_old_version,
+    update_thread, TrayIcon, TrayMenu, TrayMenuItems,
 };
 
 rust_i18n::i18n!("locales");
@@ -100,7 +100,7 @@ pub fn main() {
                                 tray_icon.take();
                                 *control_flow = ControlFlow::Exit;
                                 Command::new("open")
-                                    .arg(current_exe().unwrap())
+                                    .arg(get_current_exe_path())
                                     .output()
                                     .expect("Failed to open MessAuto");
                             }
