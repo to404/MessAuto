@@ -1,6 +1,6 @@
 use std::env::current_exe;
 use std::fs::File;
-use std::process::{Child, Command};
+use std::process::Command;
 use std::sync::mpsc;
 
 use log::{info, trace, warn};
@@ -18,11 +18,9 @@ use tray_icon::{menu::MenuEvent, TrayIconEvent};
 
 use MessAuto::{
     auto_launch, check_accessibility, check_full_disk_access, config_path, get_sys_locale,
-    log_path, mail_thread, messages_thread, open_app, read_config, replace_old_version,
-    update_thread, TrayIcon, TrayMenu, TrayMenuItems,
+    log_path, mail_thread, messages_thread, read_config, replace_old_version, update_thread,
+    TrayIcon, TrayMenu, TrayMenuItems,
 };
-
-pub const ARGS_APP: &str = "app";
 
 rust_i18n::i18n!("locales");
 pub fn main() {
