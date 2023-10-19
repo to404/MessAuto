@@ -26,9 +26,7 @@ use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use sys_locale;
-use tray_icon::Icon;
 use tray_icon::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     TrayIconBuilder,
@@ -541,19 +539,22 @@ pub fn update_thread(tx: std::sync::mpsc::Sender<bool>) {
 
 // 将下载好的新版本替换老版本
 pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
-    Command::new("unzip")
+    let unzip_output = Command::new("unzip")
         .arg("-o")
         .arg("/tmp/MessAuto.zip")
         .arg("-d")
         .arg("/tmp/")
         .output()?;
+    info!("解压: {:?}", unzip_output);
 
     Command::new("rm").arg("/tmp/MessAuto.zip").output()?;
 
-    Command::new("mv")
+    let mv_output = Command::new("cp")
+        .arg("-R")
         .arg("/tmp/MessAuto.app")
-        .arg(get_current_exe_path())
+        .arg(get_current_exe_path().parent().unwrap())
         .output()?;
+    info!("替换二进制文件: {:?}", mv_output);
     Ok(())
 }
 
