@@ -88,10 +88,19 @@ Safari 浏览器上，但并不是每个人都喜欢使用它。为了把这个�
 
 ## 自行编译
 
-- `git clone https://github.com/LeeeSe/MessAuto.git`
-- `cd MessAuto`
-- `cargo install cargo-bundle`
-- `cargo bundle --release`
+```bash
+# 下载源码
+git clone https://github.com/LeeeSe/MessAuto.git
+cd MessAuto
+
+# 编译运行
+cargo run
+
+# 安装 cargo-bundle
+cargo install cargo-bundle
+# 打包应用
+cargo bundle --release
+```
 
 ## 日志目录
 
