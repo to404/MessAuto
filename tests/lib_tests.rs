@@ -27,6 +27,7 @@ fn test_check_captcha_or_other() {
     let stdout = "【自如网】自如验证码 356407，有效时间为一分钟，请勿将验证码告知任何人！如非您本人操作，请及时致电4001001111".to_string();
     let flags = vec![
         "验证码".to_string(),
+        "动态密码".to_string(),
         "verification".to_string(),
         "code".to_string(),
         "인증".to_string(),
@@ -83,6 +84,10 @@ fn test_get_captchas() {
     let stdout = "您的验证码是12345，请勿泄露给他人。".to_string();
     let captchas = get_captchas(&stdout);
     assert_eq!(captchas, vec!["12345".to_string()]);
+
+    let stdout = "您正在使用境外网上支付验证服务，动态密码为729729。动态密码连续输错3次，您的此次交易验证会失败。请勿向他人泄露！[中国工商银行]。【工商银行】".to_string();
+    let captchas = get_captchas(&stdout);
+    assert_eq!(captchas, vec!["729729".to_string()]);
 }
 
 #[test]

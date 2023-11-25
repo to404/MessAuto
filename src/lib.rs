@@ -66,6 +66,7 @@ pub struct MAConfig {
 fn default_flags() -> Vec<String> {
     vec![
         "验证码".to_string(),
+        "动态密码".to_string(),
         "verification".to_string(),
         "code".to_string(),
         "인증".to_string(),
