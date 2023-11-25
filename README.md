@@ -93,7 +93,7 @@ Safari 浏览器上，但并不是每个人都喜欢使用它。为了把这个�
 git clone https://github.com/LeeeSe/MessAuto.git
 cd MessAuto
 
-# 编译运行
+# 编译运行（非必需，仅用于开发测试）
 cargo run
 
 # 安装 cargo-bundle
@@ -101,6 +101,8 @@ cargo install cargo-bundle
 # 打包应用
 cargo bundle --release
 ```
+
+生成的 MessAuto 应用位于 `target/release/bundle/osx/MessAuto.app`。
 
 ## 日志目录
 
