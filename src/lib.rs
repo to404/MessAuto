@@ -382,7 +382,10 @@ pub fn messages_thread() {
                 let stdout = get_message_in_one_minute();
                 let captcha_or_other = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
-                    info!("检测到新的验证码类型信息：{:?}", stdout);
+                    // 保护用户隐私
+                    // info!("检测到新的验证码类型信息：{:?}", stdout);
+
+                    info!("检测到新的验证码类型信息");
                     let captchas = get_captchas(&stdout);
                     info!("所有可能的验证码为:{:?}", captchas);
                     let real_captcha = get_real_captcha(&stdout);
@@ -605,12 +608,17 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                             let path = path.replace(".tmp", "");
                             let content = read_emlx(&path);
                             info!("len: {}", content.len());
-                            info!("邮件内容：{:?}", content);
+
+                            // 保护用户隐私
+                            // info!("邮件内容：{:?}", content);
+
                             if content.len() < 500 {
                                 let is_captcha =
                                     check_captcha_or_other(&content, &read_config().flags);
                                 if is_captcha {
-                                    info!("检测到新的验证码类型邮件：{:?}", content);
+                                    // 保护用户隐私
+                                    // info!("检测到新的验证码类型邮件：{:?}", content);
+                                    info!("检测到新的验证码类型邮件");
                                     let captchas = get_captchas(&content);
                                     info!("所有可能的验证码为:{:?}", captchas);
                                     let real_captcha = get_real_captcha(&content);
