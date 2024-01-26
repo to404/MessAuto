@@ -106,7 +106,7 @@ cargo bundle --release
 
 ## 日志目录
 
-日志文件目录：`~/.config/messauto/messauto.log`
+日志文件目录：`~/.local/share/messauto/logs/messauto.log`
 仅保留最近一次启动软件的日志
 
 ## 常见问题

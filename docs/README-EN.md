@@ -109,5 +109,5 @@ added support for email.
 
 ## Log directory
 
-Log file directory: `~/.config/messauto/messauto.log`
+Log file directory: `~/.local/share/messauto/logs/messauto.log`
 Keep only the log of the most recent startup of the software
