@@ -26,7 +26,7 @@ use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
-use sys_locale;
+
 use tray_icon::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     TrayIconBuilder,
@@ -126,7 +126,7 @@ pub fn read_config() -> MAConfig {
     let config_str = std::fs::read_to_string(config_path()).unwrap();
     let config: MAConfig = serde_json::from_str(&config_str).unwrap();
     config.update().unwrap();
-    return config;
+    config
 }
 
 pub struct TrayMenuItems {
@@ -265,24 +265,21 @@ pub fn check_full_disk_access() {
         .expect("获取用户目录失败")
         .join("Library/Messages");
     let ct = std::fs::read_dir(check_db_path);
-    match ct {
-        Err(_) => {
-            warn!("访问受阻：没有完全磁盘访问权限");
-            let yes = MessageDialog::new()
-                .set_type(MessageType::Info)
-                .set_title(t!("full-disk-access").as_str())
-                .show_confirm()
-                .unwrap();
-            if yes {
-                Command::new("open")
-                    .arg("/System/Library/PreferencePanes/Security.prefPane/")
-                    .output()
-                    .expect("Failed to open Disk Access Preferences window");
-            }
-            warn!("已弹出窗口提醒用户授权，软件将关闭等待用户重启");
-            panic!("exit without full disk access");
+    if ct.is_err() {
+        warn!("访问受阻：没有完全磁盘访问权限");
+        let yes = MessageDialog::new()
+            .set_type(MessageType::Info)
+            .set_title(t!("full-disk-access").as_str())
+            .show_confirm()
+            .unwrap();
+        if yes {
+            Command::new("open")
+                .arg("/System/Library/PreferencePanes/Security.prefPane/")
+                .output()
+                .expect("Failed to open Disk Access Preferences window");
         }
-        _ => {}
+        warn!("已弹出窗口提醒用户授权，软件将关闭等待用户重启");
+        panic!("exit without full disk access");
     }
 }
 
@@ -291,7 +288,7 @@ pub fn check_accessibility() -> bool {
 }
 
 // 检查最新信息是否是验证码类型,并返回关键词来辅助定位验证码
-pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a Vec<String>) -> bool {
+pub fn check_captcha_or_other<'a>(stdout: &'a str, flags: &'a Vec<String>) -> bool {
     for flag in flags {
         if stdout.contains(flag) {
             return true;
@@ -301,19 +298,19 @@ pub fn check_captcha_or_other<'a>(stdout: &'a String, flags: &'a Vec<String>) ->
 }
 
 // 利用正则表达式从信息中提取验证码
-pub fn get_captchas(stdout: &String) -> Vec<String> {
+pub fn get_captchas(stdout: &str) -> Vec<String> {
     let re = Regex::new(r"\b[a-zA-Z0-9]{4,7}\b").unwrap(); // 只提取4-7位数字与字母组合
-    let stdout_str = stdout.as_str();
+    let stdout_str = stdout;
     let mut captcha_vec = Vec::new();
     for m in re.find_iter(stdout_str) {
         for i in m.as_str().chars() {
-            if i.is_digit(10) {
+            if i.is_ascii_digit() {
                 captcha_vec.push(m.as_str().to_string());
                 break;
             }
         }
     }
-    return captcha_vec;
+    captcha_vec
 }
 
 // 如果检测到 chat.db 有变动，则提取最近一分钟内最新的一条信息
@@ -323,20 +320,20 @@ pub fn get_message_in_one_minute() -> String {
         .arg("SELECT text FROM message WHERE datetime(date/1000000000 + 978307200,\"unixepoch\",\"localtime\") > datetime(\"now\",\"localtime\",\"-60 second\") ORDER BY date DESC LIMIT 1;")
         .output()
         .expect("sqlite命令运行失败");
-    let stdout = String::from_utf8(output.stdout).unwrap();
-    return stdout;
+
+    String::from_utf8(output.stdout).unwrap()
 }
 
 // 如果信息中包含多个4-7位数字与字母组合（比如公司名称和验证码都是4-7位英文数字组合，例如CSDN）
 // 则选取数字字符个数最多的的那个字串作为验证码
-pub fn get_real_captcha(stdout: &String) -> String {
+pub fn get_real_captcha(stdout: &str) -> String {
     let captchas = get_captchas(stdout);
     let mut real_captcha = String::new();
     let mut max_digit_count = 0;
     for captcha in captchas {
         let mut digit_count = 0;
         for i in captcha.chars() {
-            if i.is_digit(10) {
+            if i.is_ascii_digit() {
                 digit_count += 1;
             }
         }
@@ -445,11 +442,11 @@ pub fn check_for_updates() -> Result<bool, Box<dyn Error>> {
     let latest_version = latest_version
         .unwrap()
         .chars()
-        .filter(|c| c.is_digit(10))
+        .filter(|c| c.is_ascii_digit())
         .collect::<String>();
     let current_version = current_version
         .chars()
-        .filter(|c| c.is_digit(10))
+        .filter(|c| c.is_ascii_digit())
         .collect::<String>();
     // 转换为数字
     let latest_version = latest_version.parse::<i32>()?;
@@ -599,8 +596,8 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 
     while let Some(res) = rx.next().await {
         match res {
-            Ok(event) => match event.kind {
-                notify::event::EventKind::Create(_) => {
+            Ok(event) => {
+                if let notify::event::EventKind::Create(_) = event.kind {
                     for path in event.paths {
                         let path = path.to_string_lossy();
                         if path.contains(".emlx") && path.contains("INBOX.mbox") {
@@ -628,7 +625,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                     ctx.set_contents(real_captcha.to_owned()).unwrap();
                                     let config = read_config();
                                     if config.float_window {
-                                        let child = open_app(real_captcha, t!("mail").to_string());
+                                        let _child = open_app(real_captcha, t!("mail").to_string());
                                     } else if config.auto_paste {
                                         let mut enigo = Enigo::new();
                                         paste(&mut enigo);
@@ -644,15 +641,14 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                         }
                     }
                 }
-                _ => {}
-            },
+            }
             Err(e) => error!("watch error: {:?}", e),
         }
     }
     Ok(())
 }
 
-fn read_emlx<'x>(path: &str) -> String {
+fn read_emlx(path: &str) -> String {
     let mut file = std::fs::File::open(path).unwrap();
     let mut buffer = Vec::new();
 
@@ -663,7 +659,7 @@ fn read_emlx<'x>(path: &str) -> String {
     let message = std::str::from_utf8(parsed.message).unwrap();
     let message = MessageParser::default().parse(message).unwrap();
 
-    message.body_text(0).unwrap().to_owned().to_string()
+    message.body_text(0).unwrap().clone().to_string()
 }
 
 pub fn open_app(code: String, from_app: String) -> std::process::Child {

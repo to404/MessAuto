@@ -1,4 +1,3 @@
-use std::env::current_exe;
 use std::fs::File;
 use std::process::Command;
 use std::sync::mpsc;
@@ -108,7 +107,7 @@ pub fn main() {
                         }
                         Err(e) => {
                             warn!("二进制文件替换失败: {}", e);
-                            let _ = MessageDialog::new()
+                            MessageDialog::new()
                                 .set_title(&t!("update-failed"))
                                 .set_text(&e.to_string())
                                 .show_alert()
