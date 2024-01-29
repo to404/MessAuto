@@ -104,11 +104,12 @@ fn test_get_real_captcha() {
     let result = get_real_captcha(&stdout);
     assert_eq!(result, "356407");
 
-    let stdout = String::from("【腾讯云】验证码：134560，5分钟内有效，为了保障您的账户安全，请勿向他人泄漏验证码信息");
+    let stdout = String::from(
+        "【腾讯云】验证码：134560，5分钟内有效，为了保障您的账户安全，请勿向他人泄漏验证码信息",
+    );
     let result = get_real_captcha(&stdout);
     assert_eq!(result, "134560");
 }
-
 
 #[test]
 fn test_check_for_updates() {
