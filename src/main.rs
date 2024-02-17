@@ -14,5 +14,6 @@ fn main() {
             return app::main(&args[2], &args[3]).unwrap();
         }
     }
+
     tray_icon::main();
 }
