@@ -1,11 +1,8 @@
 import { Button, VerticalBox, StyleMetrics } from "std-widgets.slint";
 
 export component AppWindow inherits Window {
-    in property <string> code;
-    in property <string> from_app;
     in property <string> paste_code_instruction;
-    in property <string> verification_code;
-    in property <string> from_label;
+    in property <string> verification_code_label;
     callback paste-code();
     always-on-top: true;
     no-frame: true;
@@ -26,7 +23,7 @@ export component AppWindow inherits Window {
             }
             Button {
                 vertical-stretch: 1;
-                text: verification_code + ":  " + code + " \n " + from_label + " " + from_app;
+                text: verification_code_label;
                 clicked => {
                     paste-code();
                 }
