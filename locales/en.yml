@@ -18,3 +18,6 @@ listening-to-mail: Listen email
 float-window: Float window
 imessage: iMassage
 mail: Mail
+paste_code_instruction: "1. Click on the code input field.\n2. ⌘ + click on the button below."
+verification-code: Verification Code
+from-label: from
