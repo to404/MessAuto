@@ -23,9 +23,9 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
     ui.on_paste_code(move || {
         let ui = ui_handle.unwrap();
         paste(&mut enigo);
-        info!("执行粘贴验证码");
+        info!("{}", t!("paste-verification-code"));
         enter(&mut enigo);
-        info!("执行回车");
+        info!("{}", t!("press-enter"));
         ui.hide().unwrap();
     });
 

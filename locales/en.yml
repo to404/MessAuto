@@ -21,3 +21,35 @@ mail: Mail
 paste_code_instruction: "1. Click on the code input field.\n2. ⌘ + click on the button below."
 verification-code: Verification Code
 from-label: from
+log-initialization-completed: Log initialization completed
+detect-and-set-app-language-to: Detect and set App language to
+successfully-obtained-disk-access-permissions: Successfully obtained disk access permissions
+latest-version-number: Latest version number
+current-version-number: Current version number
+version-up-to-date: Application is up to date
+new-verification-code-detected: New verification code detected
+all-possible-codes: All possible codes are
+real-verification-code: Real verification code
+paste-verification-code: Paste verification code
+press-enter: Press Enter
+new-version-download-success: New version download successful
+detected-new-version: Detected new version
+unzip-operation: Unzip
+replace-binary-file: Replace binary file
+new-email-received: New email received
+email-content: Email content
+new-verification-email-detected: Detected new verification type email
+binary-file-replace-success: Binary file replacement successful
+set-launch-at-login: Set launch at login
+disable-launch-at-login: Disable launch at login
+mail-listening-enabled: Email listening enabled
+mail-listening-disabled: Email listening disabled
+float-window-enabled: Float window enabled
+float-window-disabled: Float window disabled
+access-blocked-no-full-disk-access: 'Access blocked: No full disk access permission'
+popup-authorization-window-close-app-restart: 'Popup authorization window: Close app and wait for user to restart'
+new-version-download-failed: New version download failed
+update-check-failed-ensure-network-access: 'Update check failed: Ensure network can access Github and its related APIs'
+binary-file-replace-failed: Binary file replace failed
+unknown-operation: Unknown operation
+unsupported-platform: Unsupported platform
