@@ -39,7 +39,7 @@ pub fn main() {
     .unwrap();
     info!("{}", t!("log-initialization-completed"));
     let locale = get_sys_locale();
-    info!("{}：{}", t!("detect-and-set-app-language-to"), locale);
+    info!("{}: {}", t!("detect-and-set-app-language-to"), locale);
     rust_i18n::set_locale(locale);
     check_full_disk_access();
     info!("{}", t!("successfully-obtained-disk-access-permissions"));
