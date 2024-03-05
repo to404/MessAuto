@@ -37,12 +37,12 @@ pub fn main() {
         ),
     ])
     .unwrap();
-    info!("日志初始化完成");
+    info!("{}", t!("log-initialization-completed"));
     let locale = get_sys_locale();
-    info!("检测到并设置App语言为：{}", locale);
+    info!("{}: {}", t!("detect-and-set-app-language-to"), locale);
     rust_i18n::set_locale(locale);
     check_full_disk_access();
-    info!("成功获取磁盘访问权限");
+    info!("{}", t!("successfully-obtained-disk-access-permissions"));
     let mut event_loop = EventLoopBuilder::new().build();
 
     event_loop.set_activation_policy(ActivationPolicy::Accessory);
@@ -90,7 +90,7 @@ pub fn main() {
                 if yes {
                     match replace_old_version() {
                         Ok(_) => {
-                            info!("二进制文件替换成功");
+                            info!("{}", t!("binary-file-replace-success"));
                             let reboot = MessageDialog::new()
                                 .set_title(&t!("update-success"))
                                 .set_text(&t!("update-success-text"))
@@ -106,7 +106,7 @@ pub fn main() {
                             }
                         }
                         Err(e) => {
-                            warn!("二进制文件替换失败: {}", e);
+                            warn!("{}: {}", t!("binary-file-replace-failed"), e);
                             MessageDialog::new()
                                 .set_title(&t!("update-failed"))
                                 .set_text(&e.to_string())
@@ -166,11 +166,11 @@ pub fn main() {
                 if tray_menu_items.check_launch_at_login.is_checked() {
                     auto.enable().expect("failed to enable auto launch");
                     if auto.is_enabled().unwrap() {
-                        info!("设置开机自启");
+                        info!("{}", t!("set-launch-at-login"));
                         config.launch_at_login = true;
                         config.update().expect("failed to update config");
                     } else {
-                        info!("关闭开机自启");
+                        info!("{}", t!("disable-launch-at-login"));
                         tray_menu_items.check_launch_at_login.set_checked(false);
                     }
                 } else {
@@ -199,24 +199,24 @@ pub fn main() {
                     config.listening_to_mail = true;
                     config.update().expect("failed to update config");
                     mail_thread();
-                    info!("邮件监听开启");
+                    info!("{}", t!("mail-listening-enabled"));
                 } else {
                     config.listening_to_mail = false;
                     config.update().expect("failed to update config");
-                    info!("邮件监听关闭");
+                    info!("{}", t!("mail-listening-disabled"));
                 }
             } else if event.id == tray_menu_items.float_window.id() {
                 if tray_menu_items.float_window.is_checked() {
                     config.float_window = true;
                     config.update().expect("failed to update config");
-                    info!("悬浮窗开启");
+                    info!("{}", t!("float-window-enabled"));
                 } else {
                     config.float_window = false;
                     config.update().expect("failed to update config");
-                    info!("悬浮窗关闭");
+                    info!("{}", t!("float-window-disabled"));
                 }
             } else {
-                warn!("未知操作");
+                warn!("{}", t!("unknown-operation"));
             }
         }
         if let Ok(event) = tray_channel.try_recv() {

@@ -274,7 +274,7 @@ pub fn check_full_disk_access() {
         .join("Library/Messages");
     let ct = std::fs::read_dir(check_db_path);
     if ct.is_err() {
-        warn!("访问受阻：没有完全磁盘访问权限");
+        warn!("{}", t!("access-blocked-no-full-disk-access"));
         let yes = MessageDialog::new()
             .set_type(MessageType::Info)
             .set_title(t!("full-disk-access").as_str())
@@ -286,7 +286,7 @@ pub fn check_full_disk_access() {
                 .output()
                 .expect("Failed to open Disk Access Preferences window");
         }
-        warn!("已弹出窗口提醒用户授权，软件将关闭等待用户重启");
+        warn!("{}", t!("popup-authorization-window-close-app-restart"));
         panic!("exit without full disk access");
     }
 }
@@ -388,12 +388,12 @@ pub fn messages_thread() {
                 let captcha_or_other = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
                     // 保护用户隐私
-                    info!("检测到新的验证码类型信息：{:?}", stdout);
+                    info!("{}：{:?}", t!("new-verification-code-detected"), stdout);
 
                     let captchas = get_captchas(&stdout);
-                    info!("所有可能的验证码为:{:?}", captchas);
+                    info!("{}:{:?}", t!("all-possible-codes"), captchas);
                     let real_captcha = get_real_captcha(&stdout);
-                    info!("提取到真正的验证码:{:?}", real_captcha);
+                    info!("{}:{:?}", t!("real-verification-code"), real_captcha);
                     let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
                     ctx.set_contents(real_captcha.to_owned()).unwrap();
                     let config = read_config();
@@ -401,10 +401,10 @@ pub fn messages_thread() {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
                         paste(&mut enigo);
-                        info!("粘贴验证码");
+                        info!("{}", t!("paste-verification-code"));
                         if config.auto_return {
                             enter(&mut enigo);
-                            info!("执行回车");
+                            info!("{}", t!("press-enter"));
                         }
                     }
                 }
@@ -458,8 +458,8 @@ pub fn check_for_updates() -> Result<bool, Box<dyn Error>> {
     // 转换为数字
     let latest_version = latest_version.parse::<i32>()?;
     let current_version = current_version.parse::<i32>()?;
-    info!("最新版本号: {}", latest_version);
-    info!("当前版本号: {}", current_version);
+    info!("{}: {}", t!("latest-version-number"), latest_version);
+    info!("{}: {}", t!("current-version-number"), current_version);
     // 如果最新版本号大于当前版本号,则提示更新
     if latest_version > current_version {
         return Ok(true);
@@ -516,14 +516,14 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 .output()?;
         }
         _ => {
-            error!("不支持的平台");
+            error!("{}", t!("unsupported-platform"));
         }
     }
     if !Path::new("/tmp/MessAuto.zip").exists() {
-        warn!("新版本下载失败");
+        warn!("{}", t!("new-version-download-failed"));
         return Err("Download failed".into());
     } else {
-        info!("新版本下载成功");
+        info!("{}", t!("new-version-download-success"));
     }
     Ok(())
 }
@@ -532,15 +532,15 @@ pub fn update_thread(tx: std::sync::mpsc::Sender<bool>) {
     std::thread::spawn(move || {
         if check_for_updates().is_ok() {
             if check_for_updates().unwrap() {
-                info!("检测到新版本");
+                info!("{}", t!("detected-new-version"));
                 if download_latest_release().is_ok() {
                     tx.send(true).unwrap();
                 }
             } else {
-                info!("当前已是最新版本");
+                info!("{}", t!("version-up-to-date"));
             }
         } else {
-            warn!("检查更新失败，请确保网络可以正常访问 Github 及其相关 API");
+            warn!("{}", t!("update-check-failed-ensure-network-access"));
         }
     });
 }
@@ -553,7 +553,7 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
         .arg("-d")
         .arg("/tmp/")
         .output()?;
-    info!("解压: {:?}", unzip_output);
+    info!("{}: {:?}", t!("unzip-operation"), unzip_output);
 
     Command::new("rm").arg("/tmp/MessAuto.zip").output()?;
 
@@ -562,7 +562,7 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
         .arg("/tmp/MessAuto.app")
         .arg(get_current_exe_path().parent().unwrap())
         .output()?;
-    info!("替换二进制文件: {:?}", mv_output);
+    info!("{}: {:?}", t!("replace-binary-file"), mv_output);
     Ok(())
 }
 
@@ -608,13 +608,13 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                     for path in event.paths {
                         let path = path.to_string_lossy();
                         if path.contains(".emlx") && path.contains("INBOX.mbox") {
-                            info!("收到新邮件: {:?}", path);
+                            info!("{}: {:?}", t!("new-email-received"), path);
                             let path = path.replace(".tmp", "");
                             let content = read_emlx(&path);
                             info!("len: {}", content.len());
 
                             // 保护用户隐私
-                            info!("邮件内容：{:?}", content);
+                            info!("{}: {:?}", t!("email-content"), content);
 
                             if content.len() < 500 {
                                 let is_captcha =
@@ -622,11 +622,11 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                 if is_captcha {
                                     // 保护用户隐私
                                     // info!("检测到新的验证码类型邮件：{:?}", content);
-                                    info!("检测到新的验证码类型邮件");
+                                    info!("{}", t!("new-verification-email-detected"));
                                     let captchas = get_captchas(&content);
-                                    info!("所有可能的验证码为:{:?}", captchas);
+                                    info!("{}:{:?}", t!("all-possible-codes"), captchas);
                                     let real_captcha = get_real_captcha(&content);
-                                    info!("提取到真正的验证码:{:?}", real_captcha);
+                                    info!("{}:{:?}", t!("real-verification-code"), real_captcha);
                                     let mut ctx: ClipboardContext =
                                         ClipboardProvider::new().unwrap();
                                     ctx.set_contents(real_captcha.to_owned()).unwrap();
@@ -636,10 +636,10 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                     } else if config.auto_paste {
                                         let mut enigo = Enigo::new();
                                         paste(&mut enigo);
-                                        info!("粘贴验证码");
+                                        info!("{}", t!("paste-verification-code"));
                                         if config.auto_return {
                                             enter(&mut enigo);
-                                            info!("执行回车");
+                                            info!("{}", t!("press-enter"));
                                         }
                                     }
                                 }
