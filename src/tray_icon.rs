@@ -189,6 +189,11 @@ pub fn main() {
                     .arg(config_path())
                     .output()
                     .expect("Failed to open config");
+            } else if event.id == tray_menu_items.logs.id() {
+                Command::new("open")
+                    .arg(log_path())
+                    .output()
+                    .expect("Failed to open logs");
             } else if event.id == tray_menu_items.listening_to_mail.id() {
                 if tray_menu_items.listening_to_mail.is_checked() {
                     config.listening_to_mail = true;
