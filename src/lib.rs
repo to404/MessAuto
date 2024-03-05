@@ -141,6 +141,7 @@ pub struct TrayMenuItems {
     pub check_launch_at_login: CheckMenuItem,
     pub add_flag: MenuItem,
     pub maconfig: MenuItem,
+    pub logs: MenuItem,
     pub listening_to_mail: CheckMenuItem,
     pub float_window: CheckMenuItem,
 }
@@ -166,6 +167,8 @@ impl TrayMenuItems {
 
         let maconfig = MenuItem::new(t!("config"), true, None);
 
+        let logs = MenuItem::new(t!("logs"), true, None);
+
         let listening_to_mail = CheckMenuItem::new(
             t!("listening-to-mail"),
             true,
@@ -186,6 +189,7 @@ impl TrayMenuItems {
             listening_to_mail,
             float_window,
             maconfig,
+            logs,
         }
     }
 }
@@ -215,6 +219,7 @@ impl TrayMenu {
             &tray_menu_items.float_window,
             &PredefinedMenuItem::separator(),
             &tray_menu_items.maconfig,
+            &tray_menu_items.logs,
             &PredefinedMenuItem::separator(),
             &tray_menu_items.quit_i,
         ]);
