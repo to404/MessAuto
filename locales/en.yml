@@ -7,6 +7,7 @@ hide-icon-for-now: Hide for now
 hide-icon-forever: Hide forever
 add-flag: Add flag
 config: Config
+logs: Logs
 quit: Quit
 unknown-arch: Unknown architecture
 new-version: New version

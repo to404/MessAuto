@@ -7,6 +7,7 @@ hide-icon-for-now: 暂时隐藏
 hide-icon-forever: 永久隐藏
 add-flag: 添加关键词
 config: 配置
+logs: 日志
 quit: 退出
 unknown-arch: 未知架构
 new-version: 发现新版本

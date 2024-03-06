@@ -15,8 +15,8 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         from_app
     );
     let ui = AppWindow::new()?;
-    ui.set_paste_code_instruction(paste_code_instruction.into());
-    ui.set_verification_code_label(verification_code_label.into());
+    ui.set_paste_code_instruction(paste_code_instruction.to_string().into());
+    ui.set_verification_code_label(verification_code_label.to_string().into());
     let mut enigo = Enigo::new();
 
     let ui_handle = ui.as_weak();

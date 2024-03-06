@@ -277,7 +277,7 @@ pub fn check_full_disk_access() {
         warn!("{}", t!("access-blocked-no-full-disk-access"));
         let yes = MessageDialog::new()
             .set_type(MessageType::Info)
-            .set_title(t!("full-disk-access").as_str())
+            .set_title(t!("full-disk-access").to_string().as_str())
             .show_confirm()
             .unwrap();
         if yes {
@@ -388,7 +388,8 @@ pub fn messages_thread() {
                 let captcha_or_other = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
                     // 保护用户隐私
-                    info!("{}：{:?}", t!("new-verification-code-detected"), stdout);
+                    // info!("{}:{:?}", t!("new-verification-code-detected"), stdout);
+                    info!("{}", t!("new-verification-code-detected"));
 
                     let captchas = get_captchas(&stdout);
                     info!("{}:{:?}", t!("all-possible-codes"), captchas);
@@ -614,7 +615,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                             info!("len: {}", content.len());
 
                             // 保护用户隐私
-                            info!("{}: {:?}", t!("email-content"), content);
+                            info!("{}", t!("email-content"));
 
                             if content.len() < 500 {
                                 let is_captcha =
