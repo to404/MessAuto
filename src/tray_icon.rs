@@ -42,7 +42,6 @@ pub fn main() {
     info!("{}: {}", t!("detect-and-set-app-language-to"), locale);
     rust_i18n::set_locale(locale);
     check_full_disk_access();
-    info!("{}", t!("successfully-obtained-disk-access-permissions"));
     let mut event_loop = EventLoopBuilder::new().build();
 
     event_loop.set_activation_policy(ActivationPolicy::Accessory);
@@ -99,7 +98,7 @@ pub fn main() {
                             if reboot {
                                 tray_icon.take();
                                 *control_flow = ControlFlow::Exit;
-                                Command::new("open")
+                                let _ = Command::new("open")
                                     .arg(get_current_exe_path())
                                     .output()
                                     .expect("Failed to open MessAuto");
@@ -185,12 +184,12 @@ pub fn main() {
                 // } else if event.id == tray_menu_items.add_flag.id() {
                 //     println!("add flag");
             } else if event.id == tray_menu_items.maconfig.id() {
-                Command::new("open")
+                let _ = Command::new("open")
                     .arg(config_path())
                     .output()
                     .expect("Failed to open config");
             } else if event.id == tray_menu_items.logs.id() {
-                Command::new("open")
+                let _ = Command::new("open")
                     .arg(log_path())
                     .output()
                     .expect("Failed to open logs");

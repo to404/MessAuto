@@ -281,13 +281,16 @@ pub fn check_full_disk_access() {
             .show_confirm()
             .unwrap();
         if yes {
-            Command::new("open")
-                .arg("/System/Library/PreferencePanes/Security.prefPane/")
+            let _ = Command::new("sh")
+                .arg("-c")
+                .arg("open \"x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles\"")
                 .output()
                 .expect("Failed to open Disk Access Preferences window");
         }
         warn!("{}", t!("popup-authorization-window-close-app-restart"));
-        panic!("exit without full disk access");
+        // panic!("exit without full disk access");
+    }else {
+        info!("{}", t!("successfully-obtained-disk-access-permissions"));
     }
 }
 
@@ -491,7 +494,7 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_x86_64.zip",
                 latest_version.unwrap()
             );
-            Command::new("curl")
+            let _ = Command::new("curl")
                 .arg(download_url)
                 .arg("--max-time")
                 .arg("10")
@@ -506,7 +509,7 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
                 "https://github.com/LeeeSe/MessAuto/releases/download/{}/MessAuto_aarch64.zip",
                 latest_version.unwrap()
             );
-            Command::new("curl")
+            let _ = Command::new("curl")
                 .arg(download_url)
                 .arg("--max-time")
                 .arg("10")
@@ -556,7 +559,7 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
         .output()?;
     info!("{}: {:?}", t!("unzip-operation"), unzip_output);
 
-    Command::new("rm").arg("/tmp/MessAuto.zip").output()?;
+    let _ = Command::new("rm").arg("/tmp/MessAuto.zip").output()?;
 
     let mv_output = Command::new("cp")
         .arg("-R")
