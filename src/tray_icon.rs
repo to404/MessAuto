@@ -6,7 +6,7 @@ use log::{info, trace, warn};
 use native_dialog::MessageDialog;
 use rust_i18n::t;
 use simplelog::{
-    ColorChoice, CombinedLogger, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger,
+    ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger
 };
 use tao::platform::macos::ActivationPolicy;
 use tao::{
@@ -23,35 +23,44 @@ use MessAuto::{
 
 rust_i18n::i18n!("locales");
 pub fn main() {
+    let logger_config = ConfigBuilder::new()
+        .set_time_offset_to_local().unwrap()
+        .build();
     CombinedLogger::init(vec![
         TermLogger::new(
             LevelFilter::Info,
-            Config::default(),
+            logger_config.clone(),
             TerminalMode::Mixed,
             ColorChoice::Auto,
         ),
         WriteLogger::new(
             LevelFilter::Info,
-            Config::default(),
+            logger_config.clone(),
             File::create(log_path()).unwrap(),
         ),
     ])
     .unwrap();
     info!("{}", t!("log-initialization-completed"));
+
     let locale = get_sys_locale();
     info!("{}: {}", t!("detect-and-set-app-language-to"), locale);
+
     rust_i18n::set_locale(locale);
+
     check_full_disk_access();
+
     let mut event_loop = EventLoopBuilder::new().build();
 
     event_loop.set_activation_policy(ActivationPolicy::Accessory);
     let auto = auto_launch();
 
     let mut config = read_config();
+
     messages_thread();
     if config.listening_to_mail {
         mail_thread();
     }
+
     let (tx, rx) = mpsc::channel();
     update_thread(tx);
 
@@ -79,6 +88,7 @@ pub fn main() {
 
     event_loop.run(move |_event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
+        // set upgrade thread in main loop to ensure recv rx in anytime
         if let Ok(msg) = rx.try_recv() {
             if msg {
                 let yes = MessageDialog::new()
@@ -138,13 +148,13 @@ pub fn main() {
                 if tray_menu_items.check_auto_paste.is_checked() {
                     if check_accessibility() {
                         config.auto_paste = true;
+                        info!("{}", t!("enable-auto-paste"));
                         tray_menu_items
                             .check_auto_paste
                             .set_checked(config.auto_paste);
                         tray_menu_items
                             .check_auto_return
                             .set_enabled(config.auto_paste);
-                        config.update().expect("failed to update config");
                     } else {
                         config.auto_paste = false;
                         tray_menu_items
@@ -154,33 +164,31 @@ pub fn main() {
                 } else {
                     config.auto_paste = false;
                     config.auto_return = false;
+                    info!("{}", t!("disable-auto-paste"));
+                    info!("{}", t!("disable-auto-return"));
                     tray_menu_items.check_auto_return.set_enabled(false);
                     tray_menu_items.check_auto_return.set_checked(false);
-                    config.update().expect("failed to update config");
                 }
+                config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.check_auto_return.id() {
                 config.auto_return = tray_menu_items.check_auto_return.is_checked();
+                if config.auto_return {
+                    info!("{}", t!("enable-auto-return"));
+                } else {
+                    info!("{}", t!("disable-auto-return"));
+                }
                 config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.check_launch_at_login.id() {
                 if tray_menu_items.check_launch_at_login.is_checked() {
                     auto.enable().expect("failed to enable auto launch");
-                    if auto.is_enabled().unwrap() {
-                        info!("{}", t!("set-launch-at-login"));
-                        config.launch_at_login = true;
-                        config.update().expect("failed to update config");
-                    } else {
-                        info!("{}", t!("disable-launch-at-login"));
-                        tray_menu_items.check_launch_at_login.set_checked(false);
-                    }
+                    info!("{}", t!("set-launch-at-login"));
+                    config.launch_at_login = true;
                 } else {
                     auto.disable().expect("failed to disable auto launch");
-                    if !auto.is_enabled().unwrap() {
-                        config.launch_at_login = false;
-                        config.update().expect("failed to update config");
-                    } else {
-                        tray_menu_items.check_launch_at_login.set_checked(true);
-                    }
+                    info!("{}", t!("disable-launch-at-login"));
+                    config.launch_at_login = false;
                 }
+                config.update().expect("failed to update config");
                 // } else if event.id == tray_menu_items.add_flag.id() {
                 //     println!("add flag");
             } else if event.id == tray_menu_items.maconfig.id() {
@@ -196,24 +204,22 @@ pub fn main() {
             } else if event.id == tray_menu_items.listening_to_mail.id() {
                 if tray_menu_items.listening_to_mail.is_checked() {
                     config.listening_to_mail = true;
-                    config.update().expect("failed to update config");
                     mail_thread();
                     info!("{}", t!("mail-listening-enabled"));
                 } else {
                     config.listening_to_mail = false;
-                    config.update().expect("failed to update config");
                     info!("{}", t!("mail-listening-disabled"));
                 }
+                config.update().expect("failed to update config");
             } else if event.id == tray_menu_items.float_window.id() {
                 if tray_menu_items.float_window.is_checked() {
                     config.float_window = true;
-                    config.update().expect("failed to update config");
                     info!("{}", t!("float-window-enabled"));
                 } else {
                     config.float_window = false;
-                    config.update().expect("failed to update config");
                     info!("{}", t!("float-window-disabled"));
                 }
+                config.update().expect("failed to update config");
             } else {
                 warn!("{}", t!("unknown-operation"));
             }

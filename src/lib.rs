@@ -106,7 +106,6 @@ pub fn config_path() -> std::path::PathBuf {
 }
 
 pub fn log_path() -> std::path::PathBuf {
-    // create a empty path buffer
     let mut log_path = home_dir().unwrap();
     log_path.push(".local");
     log_path.push("share");
@@ -359,7 +358,7 @@ pub fn get_real_captcha(stdout: &str) -> String {
 // paste code
 pub fn paste(enigo: &mut Enigo) {
     check_accessibility();
-    // Meta + v 粘贴
+    // Meta + v 
     thread::sleep(Duration::from_millis(100));
     enigo.key_down(Key::Meta);
     thread::sleep(Duration::from_millis(100));

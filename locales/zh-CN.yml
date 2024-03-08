@@ -41,6 +41,10 @@ new-email-received: 收到新邮件
 email-content: 邮件内容
 new-verification-email-detected: 检测到新的验证码类型邮件
 binary-file-replace-success: 二进制文件替换成功
+enable-auto-paste: 启用自动粘贴
+enable-auto-return: 启用自动回车
+disable-auto-paste: 禁用自动粘贴
+disable-auto-return: 禁用自动回车
 set-launch-at-login: 设置开机自启
 disable-launch-at-login: 关闭开机自启
 mail-listening-enabled: 邮件监听开启

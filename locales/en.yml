@@ -41,6 +41,10 @@ new-email-received: New email received
 email-content: Email content
 new-verification-email-detected: Detected new verification type email
 binary-file-replace-success: Binary file replacement successful
+enable-auto-paste: Enable auto paste
+enable-auto-return: Enable auto return
+disable-auto-paste: Disable auto paste
+disable-auto-return: Disable auto return
 set-launch-at-login: Set launch at login
 disable-launch-at-login: Disable launch at login
 mail-listening-enabled: Email listening enabled
