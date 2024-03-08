@@ -310,7 +310,7 @@ pub fn check_captcha_or_other<'a>(stdout: &'a str, flags: &'a Vec<String>) -> bo
 
 // 利用正则表达式从信息中提取验证码
 pub fn get_captchas(stdout: &str) -> Vec<String> {
-    let re = Regex::new(r"\b[a-zA-Z0-9]{4,7}\b").unwrap(); // 只提取4-7位数字与字母组合
+    let re = Regex::new(r"\b[a-zA-Z0-9]{4,8}\b").unwrap(); // 只提取4-8位数字与字母组合
     let stdout_str = stdout;
     let mut captcha_vec = Vec::new();
     for m in re.find_iter(stdout_str) {
@@ -335,7 +335,7 @@ pub fn get_message_in_one_minute() -> String {
     String::from_utf8(output.stdout).unwrap()
 }
 
-// 如果信息中包含多个4-7位数字与字母组合（比如公司名称和验证码都是4-7位英文数字组合，例如CSDN）
+// 如果信息中包含多个4-8位数字与字母组合（比如公司名称和验证码都是4-8位英文数字组合，例如CSDN）
 // 则选取数字字符个数最多的的那个字串作为验证码
 pub fn get_real_captcha(stdout: &str) -> String {
     let captchas = get_captchas(stdout);
