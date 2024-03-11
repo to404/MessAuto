@@ -19,7 +19,7 @@ listening-to-mail: 监听邮件
 float-window: 悬浮窗
 imessage: 信息
 mail: 邮件
-paste_code_instruction: "1. 用鼠标左键点击验证码输入框\n2. 用 ⌘ + click 点击下方按钮"
+paste_code_instruction: "1. 点击验证码输入框\n2. 点击下方按钮"
 verification-code: 验证码
 from-label: 来自
 log-initialization-completed: 日志初始化完成
