@@ -27,6 +27,13 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
     slint::platform::set_platform(Box::new(backend)).unwrap();
     let ui = AppWindow::new()?;
 
+    let ui_weak = ui.as_weak();
+    ui.on_mouse_move(move |delta_x, delta_y| {
+            let ui_weak = ui_weak.unwrap();
+            let logical_pos = ui_weak.window().position();
+            ui_weak.window().set_position(slint::PhysicalPosition::new(logical_pos.x + delta_x as i32, logical_pos.y + delta_y as i32));
+    });
+    
     ui.set_paste_code_instruction(paste_code_instruction.to_string().into());
     ui.set_verification_code_label(verification_code_label.to_string().into());
     let mut enigo = Enigo::new();
