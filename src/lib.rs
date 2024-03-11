@@ -12,7 +12,7 @@ use std::{
 use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use emlx::parse_emlx;
-use enigo::{Enigo, Key, KeyboardControllable};
+use enigo::{Enigo, Key, KeyboardControllable, MouseControllable};
 use futures::{
     channel::mpsc::{channel, Receiver},
     SinkExt, StreamExt,
@@ -357,8 +357,9 @@ pub fn get_real_captcha(stdout: &str) -> String {
 
 // paste code
 pub fn paste(enigo: &mut Enigo) {
-    check_accessibility();
-    // Meta + v 
+    // if have no accessibility, will pop up a window to ask for permission
+    // check_accessibility();
+    // Meta + v
     thread::sleep(Duration::from_millis(100));
     enigo.key_down(Key::Meta);
     thread::sleep(Duration::from_millis(100));
@@ -370,7 +371,7 @@ pub fn paste(enigo: &mut Enigo) {
 
 // enter the pasted code
 pub fn enter(enigo: &mut Enigo) {
-    check_accessibility();
+    // check_accessibility();
     thread::sleep(Duration::from_millis(100));
     enigo.key_click(Key::Return);
     thread::sleep(Duration::from_millis(100));
