@@ -23,7 +23,7 @@
 
 MessAuto 是一款 macOS 平台自动提取短信和邮箱验证码的软件，由 Rust 开发，适用于任何 App
 
-下面展示了在 MessAuto 的辅助下十秒内完成短信登录的过程
+下面展示了在 MessAuto 的辅助下完成短信登录的过程
 
 https://github.com/LeeeSe/MessAuto/assets/44465325/6e0aca37-377f-463b-b27e-a12ff8c1e70b
 
@@ -49,14 +49,14 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 - 暂时隐藏：暂时隐藏图标，应用重启时图标重现（需先退出后台），适合不经常重启 Mac 的用户
 - 永久隐藏：永久隐藏图标，应用重启也不会再显示图标，适合经常重启 Mac 的用户，若需重新显示图标，需要删除 `~/.config/messauto/messauto.json` 文件，并重启应用
 - 配置：点击后将打开json格式的配置文件，可以在其中自定义关键词
-- 监听邮件：开启后将同时监听邮件
-- 悬浮窗：类似于 Safari 自动填充验证码的悬浮窗，但无法自动定位验证码输入框位置
+- 监听邮件：开启后将同时监听邮件,要求邮件 App 常驻后台
+- 悬浮窗：获取验证码后将弹出一个方便的悬浮窗口
 
 > 关键词: 也叫触发词，当信息中包含如“验证码”等关键词时，程序才会执行一系列后续操作，否则会忽略此条信息
 
-<p align="center">
+<!-- <p align="center">
 <img src="assets/images/status_item.png" alt="statesitem.jpg" width=548 style="padding:20px" >
-</p>
+</p> -->
 
 
 ## 注意
