@@ -1,5 +1,17 @@
 <p align="center">
-  <img src="images/icon_256.png" width=240 />
+  <img src="images/icon_256.png" height="256">
+  <h1 align="center">MessAuto</h1>
+  <h4 align="center"> Easy to look up words or translate text</h4>
+<p align="center"> 
+<a href="https://github.com/tisfeng/easydict/blob/main/LICENSE">
+<img src="https://img.shields.io/github/license/LeeeSe/messauto"
+            alt="License"></a>
+<a href="https://github.com/tisfeng/Easydict/releases">
+<img src="https://img.shields.io/github/downloads/LeeeSe/messauto/total.svg"
+            alt="Downloads"></a>
+<a href="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white">
+<img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white"
+            alt="macOS"></a>  
 </p>
 
 <p align="center">
