@@ -1,7 +1,7 @@
 <p align="center">
   <img src="images/icon_256.png" height="256">
   <h1 align="center">MessAuto</h1>
-  <h4 align="center"> 自动提取Mac平台的短信和邮箱验证码；Automatic extraction of SMS verification code for Mac platform</h4>
+  <h4 align="center"> 自动提取Mac平台的短信和邮箱验证码</h4>
   <h4 align="center"> Automatic extraction of SMS verification code for Mac platform</h4>
 <p align="center"> 
 <a href="https://github.com/tisfeng/easydict/blob/main/LICENSE">
