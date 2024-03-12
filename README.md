@@ -23,13 +23,13 @@
 
 MessAuto 是一款 macOS 平台自动提取短信和邮箱验证码的软件，由 Rust 开发，适用于任何 App
 
-🎉🎉🎉 MessAuto 现在支持邮件 App
-
-https://github.com/LeeeSe/MessAuto/assets/44465325/33dcec87-61c4-4510-a87c-ef43e69c4e9d
-
 下面展示了在 MessAuto 的辅助下十秒内完成短信登录的过程
 
 https://github.com/LeeeSe/MessAuto/assets/44465325/6e0aca37-377f-463b-b27e-a12ff8c1e70b
+
+🎉🎉🎉 MessAuto 现在支持邮件 App
+
+https://github.com/LeeeSe/MessAuto/assets/44465325/33dcec87-61c4-4510-a87c-ef43e69c4e9d
 
 ## 特点
 
