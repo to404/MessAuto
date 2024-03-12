@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="images/icon_256.png" height="256">
+  <img src="assets/images/icon_256.png" height="256">
   <h1 align="center">MessAuto</h1>
   <h4 align="center"> 自动提取Mac平台的短信和邮箱验证码</h4>
   <h4 align="center"> Automatic extraction of SMS verification code for Mac platform</h4>
@@ -23,11 +23,11 @@
 
 MessAuto 是一款 macOS 平台自动提取短信和邮箱验证码的软件，由 Rust 开发，适用于任何 App
 
-下面展示了在 MessAuto 的辅助下十秒内完成短信登录的过程，点击按钮后只需稍作等待☕️
+🎉🎉🎉 MessAuto 现在支持邮件 App
+https://github.com/LeeeSe/MessAuto/assets/44465325/33dcec87-61c4-4510-a87c-ef43e69c4e9d
 
-<p align="center">
-<img src="images/Verification-in-10s.gif" alt="Verification-in-10s.gif" width=640 style="padding:20px" >
-</p>
+下面展示了在 MessAuto 的辅助下十秒内完成短信登录的过程
+https://github.com/LeeeSe/MessAuto/assets/44465325/6e0aca37-377f-463b-b27e-a12ff8c1e70b
 
 ## 特点
 
@@ -53,7 +53,7 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 > 关键词: 也叫触发词，当信息中包含如“验证码”等关键词时，程序才会执行一系列后续操作，否则会忽略此条信息
 
 <p align="center">
-<img src="images/status_item.png" alt="statesitem.jpg" width=548 style="padding:20px" >
+<img src="assets/images/status_item.png" alt="statesitem.jpg" width=548 style="padding:20px" >
 </p>
 
 
