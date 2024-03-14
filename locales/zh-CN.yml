@@ -52,9 +52,11 @@ mail-listening-disabled: 邮件监听关闭
 float-window-enabled: 悬浮窗开启
 float-window-disabled: 悬浮窗关闭
 access-blocked-no-full-disk-access: 访问受阻：没有完全磁盘访问权限
-popup-authorization-window-close-app-restart: 已弹出窗口提醒用户授权，软件将关闭等待用户重启
 new-version-download-failed: 新版本下载失败
 update-check-failed-ensure-network-access: 检查更新失败，请确保网络可以正常访问 Github 及其相关 API
 binary-file-replace-failed: 二进制文件替换失败
 unknown-operation: 未知操作
 unsupported-platform: 不支持的平台
+error-when-open-authorization-window: 打开授权窗口时出错
+popup-authorization-window: 弹出授权窗口
+

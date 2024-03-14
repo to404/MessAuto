@@ -6,7 +6,6 @@ rust_i18n::i18n!("locales");
 
 fn main() {
     let args: Vec<String> = std::env::args().collect();
-    println!("{:?}", args);
 
     if args.len() > 1 {
         let arg1 = args[1].to_lowercase();

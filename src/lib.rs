@@ -12,7 +12,7 @@ use std::{
 use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use emlx::parse_emlx;
-use enigo::{Enigo, Key, KeyboardControllable, MouseControllable};
+use enigo::{Enigo, Key, KeyboardControllable};
 use futures::{
     channel::mpsc::{channel, Receiver},
     SinkExt, StreamExt,
@@ -69,6 +69,7 @@ fn default_flags() -> Vec<String> {
         "动态密码".to_string(),
         "verification".to_string(),
         "code".to_string(),
+        "Code".to_string(),
         "인증".to_string(),
         "代码".to_string(),
     ]
@@ -231,9 +232,9 @@ pub struct TrayIcon {}
 impl TrayIcon {
     pub fn build(tray_menu: Menu) -> Option<tray_icon::TrayIcon> {
         let bin_path = get_current_exe_path();
-        let mut icon_path = bin_path.join("Contents/Resources/images/icon.png");
+        let mut icon_path = bin_path.join("Contents/Resources/assets/images/icon.png");
         if !icon_path.exists() {
-            icon_path = "images/icon.png".into();
+            icon_path = "assets/images/icon.png".into();
         }
         let icon = load_icon(std::path::Path::new(&icon_path));
         Some(
@@ -280,13 +281,16 @@ pub fn check_full_disk_access() {
             .show_confirm()
             .unwrap();
         if yes {
-            let _ = Command::new("sh")
+            let output = Command::new("sh")
                 .arg("-c")
-                .arg("open \"x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles\"")
-                .output()
-                .expect("Failed to open Disk Access Preferences window");
+                .arg("open x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+                .output();
+            if output.is_err(){
+                error!("{}", t!("error-when-open-authorization-window"));
+            }else {
+                warn!("{}", t!("popup-authorization-window"));
+            }
         }
-        warn!("{}", t!("popup-authorization-window-close-app-restart"));
         // panic!("exit without full disk access");
     }else {
         info!("{}", t!("successfully-obtained-disk-access-permissions"));
@@ -618,7 +622,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                             info!("len: {}", content.len());
 
                             // 保护用户隐私
-                            info!("{}", t!("email-content"));
+                            // info!("{}", t!("email-content"));
 
                             if content.len() < 500 {
                                 let is_captcha =

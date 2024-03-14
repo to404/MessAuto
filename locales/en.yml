@@ -52,9 +52,12 @@ mail-listening-disabled: Email listening disabled
 float-window-enabled: Float window enabled
 float-window-disabled: Float window disabled
 access-blocked-no-full-disk-access: 'Access blocked: No full disk access permission'
-popup-authorization-window-close-app-restart: 'Popup authorization window: Close app and wait for user to restart'
 new-version-download-failed: New version download failed
 update-check-failed-ensure-network-access: 'Update check failed: Ensure network can access Github and its related APIs'
 binary-file-replace-failed: Binary file replace failed
 unknown-operation: Unknown operation
 unsupported-platform: Unsupported platform
+error-when-open-authorization-window: Error when open authorization window
+popup-authorization-window: Popup authorization window
+
+

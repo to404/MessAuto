@@ -1,6 +1,6 @@
 [package]
 name = "MessAuto"
-version = "0.6.4"
+version = "0.7.0"
 edition = "2021"
 description = "Automatic extraction of Email and SMS verification code for Mac platform."
 
@@ -29,7 +29,6 @@ mail-parser = "0.9.1"
 slint = { git = "https://github.com/LeeeSe/slint.git" , tag = "v1.4.2"}
 image = "0.25.0"
 i-slint-backend-winit = { git = "https://github.com/LeeeSe/slint.git", tag = "v1.4.2" }
-# i-slint-backend-winit = "1.4.1"
 
 
 [build-dependencies]
@@ -43,7 +42,8 @@ load-path = "locales"
 [package.metadata.bundle]
 name = "MessAuto"
 identifier = "com.doe.messauto"
-icon = ["images/icon_256.png"]
+icon = ["assets/images/icon_256.png"]
 copyright = "Copyright (c) LeeeSe 2022. All rights reserved."
 short_description = "Automatic extraction of SMS verification code for Mac platform."
-resources = ["images/icon.png"]
+resources = ["assets/images/icon.png"]
+osx_info_plist_exts = ["ui/info.plist"]
