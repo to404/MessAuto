@@ -6,7 +6,7 @@ use log::{info, trace, warn};
 use native_dialog::MessageDialog;
 use rust_i18n::t;
 use simplelog::{
-    ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger
+    ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger,
 };
 use tao::platform::macos::ActivationPolicy;
 use tao::{
@@ -24,7 +24,8 @@ use MessAuto::{
 rust_i18n::i18n!("locales");
 pub fn main() {
     let logger_config = ConfigBuilder::new()
-        .set_time_offset_to_local().unwrap()
+        .set_time_offset_to_local()
+        .unwrap()
         .build();
     CombinedLogger::init(vec![
         TermLogger::new(

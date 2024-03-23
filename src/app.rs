@@ -1,11 +1,14 @@
-use enigo::{Enigo, MouseControllable};
+use core::time;
+use std::{thread::sleep, time::Duration};
+
 use i_slint_backend_winit::winit::{
     dpi::{LogicalPosition, Position},
     platform::macos::WindowBuilderExtMacOS,
 };
-use log::info;
+use log::{error, info};
+use mouse_position::mouse_position::Mouse;
 use rust_i18n::t;
-use MessAuto::{enter, get_sys_locale, paste};
+use MessAuto::{enter_rdev, get_sys_locale, paste_rdev, sleep_key};
 
 slint::include_modules!();
 
@@ -47,22 +50,36 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
     ui.set_paste_code_instruction(paste_code_instruction.to_string().into());
     ui.set_verification_code_label(verification_code_label.to_string().into());
 
-    let mut enigo = Enigo::new();
+    let position = Mouse::get_mouse_position();
+    let mut mouse_pos = (0, 0);
+    match position {
+        Mouse::Position { x, y } => mouse_pos = (x, y),
+        Mouse::Error => error!("error-getting-mouse-position"),
+    }
 
-    let mouse_pos = enigo.mouse_location();
-    ui.window().set_position(
-        slint::LogicalPosition::new(mouse_pos.0 as f32, mouse_pos.1 as f32)
-            .to_physical(ui.window().scale_factor()),
+    println!(
+        "before mouse and window{:?}, {:?}",
+        mouse_pos,
+        ui.window().position()
     );
+    ui.window()
+        .set_position(slint::PhysicalPosition::new(mouse_pos.0, mouse_pos.1));
 
+    println!(
+        "after mouse and window{:?}, {:?}",
+        mouse_pos,
+        ui.window().position()
+    );
     let ui_handle = ui.as_weak();
 
     ui.on_paste_code(move || {
         let ui = ui_handle.unwrap();
-        paste(&mut enigo);
+        paste_rdev();
         info!("{}", t!("paste-verification-code"));
-        enter(&mut enigo);
+        sleep_key();
+        enter_rdev();
         info!("{}", t!("press-enter"));
+        sleep_key();
         ui.hide().unwrap();
     });
 

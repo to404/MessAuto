@@ -1,3 +1,4 @@
+use core::time;
 use std::io::Read;
 use std::thread::sleep;
 use std::{
@@ -12,7 +13,6 @@ use std::{
 use auto_launch::AutoLaunch;
 use clipboard::{ClipboardContext, ClipboardProvider};
 use emlx::parse_emlx;
-use enigo::{Enigo, Key, KeyboardControllable};
 use futures::{
     channel::mpsc::{channel, Receiver},
     SinkExt, StreamExt,
@@ -23,6 +23,7 @@ use macos_accessibility_client::accessibility::application_is_trusted_with_promp
 use mail_parser::MessageParser;
 use native_dialog::{MessageDialog, MessageType};
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
+use rdev::{simulate, EventType, SimulateError};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
@@ -283,16 +284,18 @@ pub fn check_full_disk_access() {
         if yes {
             let output = Command::new("sh")
                 .arg("-c")
-                .arg("open x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")
+                .arg(
+                    "open x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles",
+                )
                 .output();
-            if output.is_err(){
+            if output.is_err() {
                 error!("{}", t!("error-when-open-authorization-window"));
-            }else {
+            } else {
                 warn!("{}", t!("popup-authorization-window"));
             }
         }
         // panic!("exit without full disk access");
-    }else {
+    } else {
         info!("{}", t!("successfully-obtained-disk-access-permissions"));
     }
 }
@@ -359,31 +362,57 @@ pub fn get_real_captcha(stdout: &str) -> String {
     real_captcha
 }
 
-// paste code
-pub fn paste(enigo: &mut Enigo) {
-    // if have no accessibility, will pop up a window to ask for permission
-    // check_accessibility();
-    // Meta + v
-    thread::sleep(Duration::from_millis(100));
-    enigo.key_down(Key::Meta);
-    thread::sleep(Duration::from_millis(100));
-    enigo.key_click(Key::Raw(0x09));
-    thread::sleep(Duration::from_millis(100));
-    enigo.key_up(Key::Meta);
-    thread::sleep(Duration::from_millis(100));
+// // paste code
+// pub fn paste(enigo: &mut Enigo) {
+//     // if have no accessibility, will pop up a window to ask for permission
+//     // check_accessibility();
+//     // Meta + v
+//     thread::sleep(Duration::from_millis(100));
+//     enigo.key_down(Key::Meta);
+//     thread::sleep(Duration::from_millis(100));
+//     enigo.key_click(Key::Raw(0x09));
+//     thread::sleep(Duration::from_millis(100));
+//     enigo.key_up(Key::Meta);
+//     thread::sleep(Duration::from_millis(100));
+// }
+//
+// // enter the pasted code
+// pub fn enter(enigo: &mut Enigo) {
+//     // check_accessibility();
+//     thread::sleep(Duration::from_millis(100));
+//     enigo.key_click(Key::Return);
+//     thread::sleep(Duration::from_millis(100));
+// }
+
+// send keyboard event
+pub fn send(event_type: &EventType) {
+    let delay = time::Duration::from_millis(20);
+    match simulate(event_type) {
+        Ok(()) => (),
+        Err(SimulateError) => {
+            error!("cant-sent-keyboard-event");
+        }
+    }
+    thread::sleep(delay);
 }
 
-// enter the pasted code
-pub fn enter(enigo: &mut Enigo) {
-    // check_accessibility();
-    thread::sleep(Duration::from_millis(100));
-    enigo.key_click(Key::Return);
-    thread::sleep(Duration::from_millis(100));
+pub fn paste_rdev() {
+    std::thread::spawn(|| {
+        send(&EventType::KeyPress(rdev::Key::MetaLeft));
+        send(&EventType::KeyPress(rdev::Key::KeyV));
+        send(&EventType::KeyRelease(rdev::Key::KeyV));
+        send(&EventType::KeyRelease(rdev::Key::MetaLeft));
+    });
 }
 
+pub fn enter_rdev() {
+    std::thread::spawn(|| {
+        send(&EventType::KeyPress(rdev::Key::Return));
+        send(&EventType::KeyRelease(rdev::Key::Return));
+    });
+}
 pub fn messages_thread() {
     std::thread::spawn(move || {
-        let mut enigo = Enigo::new();
         let flags = read_config().flags;
         let check_db_path = home_dir().unwrap().join("Library/Messages/chat.db-wal");
         let mut last_metadata_modified = fs::metadata(&check_db_path).unwrap().modified().unwrap();
@@ -408,10 +437,12 @@ pub fn messages_thread() {
                     if config.float_window {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
-                        paste(&mut enigo);
+                        paste_rdev();
+                        sleep_key();
                         info!("{}", t!("paste-verification-code"));
                         if config.auto_return {
-                            enter(&mut enigo);
+                            enter_rdev();
+                            sleep_key();
                             info!("{}", t!("press-enter"));
                         }
                     }
@@ -642,11 +673,12 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                     if config.float_window {
                                         let _child = open_app(real_captcha, t!("mail").to_string());
                                     } else if config.auto_paste {
-                                        let mut enigo = Enigo::new();
-                                        paste(&mut enigo);
+                                        paste_rdev();
+                                        sleep_key();
                                         info!("{}", t!("paste-verification-code"));
                                         if config.auto_return {
-                                            enter(&mut enigo);
+                                            enter_rdev();
+                                            sleep_key();
                                             info!("{}", t!("press-enter"));
                                         }
                                     }
@@ -689,4 +721,8 @@ fn start_process(command_args: Vec<String>) -> std::process::Child {
         .spawn()
         .unwrap();
     child
+}
+
+pub fn sleep_key() {
+    sleep(Duration::from_millis(20));
 }
