@@ -57,19 +57,9 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         Mouse::Error => error!("error-getting-mouse-position"),
     }
 
-    println!(
-        "before mouse and window{:?}, {:?}",
-        mouse_pos,
-        ui.window().position()
-    );
     ui.window()
         .set_position(slint::PhysicalPosition::new(mouse_pos.0, mouse_pos.1));
 
-    println!(
-        "after mouse and window{:?}, {:?}",
-        mouse_pos,
-        ui.window().position()
-    );
     let ui_handle = ui.as_weak();
 
     ui.on_paste_code(move || {

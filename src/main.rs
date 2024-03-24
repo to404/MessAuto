@@ -1,4 +1,4 @@
-mod app;
+mod float_window;
 mod tray_icon;
 
 pub const ARGS_APP: &str = "app";
@@ -10,7 +10,7 @@ fn main() {
     if args.len() > 1 {
         let arg1 = args[1].to_lowercase();
         if arg1.starts_with(ARGS_APP) {
-            return app::main(&args[2], &args[3]).unwrap();
+            return float_window::main(&args[2], &args[3]).unwrap();
         }
     }
 

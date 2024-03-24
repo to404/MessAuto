@@ -3,7 +3,7 @@
   <h1 align="center">MessAuto</h1>
   <h4 align="center"> 自动提取Mac平台的短信和邮箱验证码</h4>
   <h4 align="center"> Automatic extraction of SMS verification code for Mac platform</h4>
-<p align="center"> 
+<p align="center">
 <a href="https://github.com/tisfeng/easydict/blob/main/LICENSE">
 <img src="https://img.shields.io/github/license/LeeeSe/messauto"
             alt="License"></a>
@@ -12,7 +12,7 @@
             alt="Downloads"></a>
 <a href="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white">
 <img src="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white"
-            alt="macOS"></a>  
+            alt="macOS"></a>
 </p>
 
 <p align="center">
@@ -57,7 +57,6 @@ MessAuto 是一个没有 GUI 的菜单栏软件，第一次启动时 MessAuto �
 <!-- <p align="center">
 <img src="assets/images/status_item.png" alt="statesitem.jpg" width=548 style="padding:20px" >
 </p> -->
-
 
 ## 注意
 
@@ -128,8 +127,9 @@ cargo bundle --release
 仅保留最近一次启动软件的日志
 
 ## 常见问题
+
 - 给了权限但还是弹出权限请求：暂时的解决方法是从设置面板的辅助功能和磁盘权限列表中将原来的 MessAuto 通过下面的"-"号移除，当再次弹出权限请求时正常同意即可工作
 
 ## 感谢
 
-* 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路
+- 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路

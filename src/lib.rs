@@ -1,4 +1,3 @@
-use core::time;
 use std::io::Read;
 use std::thread::sleep;
 use std::{
@@ -92,14 +91,14 @@ impl Default for MAConfig {
 
 impl MAConfig {
     // update the local config "~/.config/messauto/messauto.json"
-    pub fn update(&self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn update(&self) -> Result<(), Box<dyn Error>> {
         let updated_config_str = serde_json::to_string(&self)?;
-        std::fs::write(config_path(), updated_config_str)?;
+        fs::write(config_path(), updated_config_str)?;
         Ok(())
     }
 }
 
-pub fn config_path() -> std::path::PathBuf {
+pub fn config_path() -> PathBuf {
     let mut config_path = home_dir().unwrap();
     config_path.push(".config");
     config_path.push("messauto");
@@ -107,15 +106,13 @@ pub fn config_path() -> std::path::PathBuf {
     config_path
 }
 
-pub fn log_path() -> std::path::PathBuf {
+pub fn log_path() -> PathBuf {
     let mut log_path = home_dir().unwrap();
-    log_path.push(".local");
-    log_path.push("share");
+    log_path.push(".config");
     log_path.push("messauto");
-    log_path.push("logs");
     log_path.push("messauto.log");
     if !log_path.exists() {
-        std::fs::create_dir_all(log_path.parent().unwrap()).unwrap();
+        fs::create_dir_all(log_path.parent().unwrap()).unwrap();
     }
     log_path
 }
@@ -124,10 +121,10 @@ pub fn read_config() -> MAConfig {
     if !config_path().exists() {
         let config = MAConfig::default();
         let config_str = serde_json::to_string(&config).unwrap();
-        std::fs::create_dir_all(config_path().parent().unwrap()).unwrap();
-        std::fs::write(config_path(), config_str).unwrap();
+        fs::create_dir_all(config_path().parent().unwrap()).unwrap();
+        fs::write(config_path(), config_str).unwrap();
     }
-    let config_str = std::fs::read_to_string(config_path()).unwrap();
+    let config_str = fs::read_to_string(config_path()).unwrap();
     let config: MAConfig = serde_json::from_str(&config_str).unwrap();
     config.update().unwrap();
     config
@@ -237,7 +234,7 @@ impl TrayIcon {
         if !icon_path.exists() {
             icon_path = "assets/images/icon.png".into();
         }
-        let icon = load_icon(std::path::Path::new(&icon_path));
+        let icon = load_icon(Path::new(&icon_path));
         Some(
             TrayIconBuilder::new()
                 .with_menu(Box::new(tray_menu))
@@ -249,7 +246,7 @@ impl TrayIcon {
     }
 }
 
-fn load_icon(path: &std::path::Path) -> tray_icon::Icon {
+fn load_icon(path: &Path) -> tray_icon::Icon {
     let (icon_rgba, icon_width, icon_height) = {
         let image = image::open(path)
             .expect("Failed to open icon path")
@@ -273,7 +270,7 @@ pub fn check_full_disk_access() {
     let check_db_path = home_dir()
         .expect("获取用户目录失败")
         .join("Library/Messages");
-    let ct = std::fs::read_dir(check_db_path);
+    let ct = fs::read_dir(check_db_path);
     if ct.is_err() {
         warn!("{}", t!("access-blocked-no-full-disk-access"));
         let yes = MessageDialog::new()
@@ -316,7 +313,8 @@ pub fn check_captcha_or_other<'a>(stdout: &'a str, flags: &'a Vec<String>) -> bo
 
 // 利用正则表达式从信息中提取验证码
 pub fn get_captchas(stdout: &str) -> Vec<String> {
-    let re = Regex::new(r"\b[a-zA-Z0-9]{4,8}\b").unwrap(); // 只提取4-8位数字与字母组合
+    // let re = Regex::new(r"\b[a-zA-Z0-9]{4,8}\b").unwrap(); // 只提取4-8位数字与字母组合
+    let re = Regex::new(r"\b[a-zA-Z0-9][a-zA-Z0-9-]{2,6}[a-zA-Z0-9]\b").unwrap();
     let stdout_str = stdout;
     let mut captcha_vec = Vec::new();
     for m in re.find_iter(stdout_str) {
@@ -386,18 +384,17 @@ pub fn get_real_captcha(stdout: &str) -> String {
 
 // send keyboard event
 pub fn send(event_type: &EventType) {
-    let delay = time::Duration::from_millis(20);
     match simulate(event_type) {
         Ok(()) => (),
         Err(SimulateError) => {
             error!("cant-sent-keyboard-event");
         }
     }
-    thread::sleep(delay);
+    sleep_key();
 }
 
 pub fn paste_rdev() {
-    std::thread::spawn(|| {
+    thread::spawn(|| {
         send(&EventType::KeyPress(rdev::Key::MetaLeft));
         send(&EventType::KeyPress(rdev::Key::KeyV));
         send(&EventType::KeyRelease(rdev::Key::KeyV));
@@ -406,13 +403,13 @@ pub fn paste_rdev() {
 }
 
 pub fn enter_rdev() {
-    std::thread::spawn(|| {
+    thread::spawn(|| {
         send(&EventType::KeyPress(rdev::Key::Return));
         send(&EventType::KeyRelease(rdev::Key::Return));
     });
 }
 pub fn messages_thread() {
-    std::thread::spawn(move || {
+    thread::spawn(move || {
         let flags = read_config().flags;
         let check_db_path = home_dir().unwrap().join("Library/Messages/chat.db-wal");
         let mut last_metadata_modified = fs::metadata(&check_db_path).unwrap().modified().unwrap();
@@ -448,7 +445,7 @@ pub fn messages_thread() {
                     }
                 }
             }
-            std::thread::sleep(Duration::from_secs(5));
+            sleep(Duration::from_secs(5));
         }
     });
 }
@@ -568,7 +565,7 @@ pub fn download_latest_release() -> Result<(), Box<dyn Error>> {
 }
 
 pub fn update_thread(tx: std::sync::mpsc::Sender<bool>) {
-    std::thread::spawn(move || {
+    thread::spawn(move || {
         if check_for_updates().is_ok() {
             if check_for_updates().unwrap() {
                 info!("{}", t!("detected-new-version"));
@@ -606,7 +603,7 @@ pub fn replace_old_version() -> Result<(), Box<dyn Error>> {
 }
 
 pub fn mail_thread() {
-    std::thread::spawn(move || {
+    thread::spawn(move || {
         let mail_path = home_dir().unwrap().join("Library/Mail");
         let path = String::from(mail_path.to_str().unwrap());
 
@@ -684,7 +681,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                     }
                                 }
                             }
-                            sleep(std::time::Duration::from_secs(5));
+                            async_std::task::sleep(Duration::from_secs(5)).await;
                         }
                     }
                 }
@@ -696,7 +693,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
 }
 
 fn read_emlx(path: &str) -> String {
-    let mut file = std::fs::File::open(path).unwrap();
+    let mut file = fs::File::open(path).unwrap();
     let mut buffer = Vec::new();
 
     file.read_to_end(&mut buffer).unwrap();

@@ -62,8 +62,9 @@ pub fn main() {
         mail_thread();
     }
 
-    let (tx, rx) = mpsc::channel();
-    update_thread(tx);
+    // 禁用自动更新
+    // let (tx, rx) = mpsc::channel();
+    // update_thread(tx);
 
     let tray_menu_items = TrayMenuItems::build(&config);
     let tray_menu = TrayMenu::build(&tray_menu_items);
@@ -90,43 +91,43 @@ pub fn main() {
     event_loop.run(move |_event, _, control_flow| {
         *control_flow = ControlFlow::Wait;
         // set upgrade thread in main loop to ensure recv rx in anytime
-        if let Ok(msg) = rx.try_recv() {
-            if msg {
-                let yes = MessageDialog::new()
-                    .set_title(&t!("new-version"))
-                    .set_text(&t!("new-version-text"))
-                    .show_confirm()
-                    .unwrap();
-                if yes {
-                    match replace_old_version() {
-                        Ok(_) => {
-                            info!("{}", t!("binary-file-replace-success"));
-                            let reboot = MessageDialog::new()
-                                .set_title(&t!("update-success"))
-                                .set_text(&t!("update-success-text"))
-                                .show_confirm()
-                                .unwrap();
-                            if reboot {
-                                tray_icon.take();
-                                *control_flow = ControlFlow::Exit;
-                                let _ = Command::new("open")
-                                    .arg(get_current_exe_path())
-                                    .output()
-                                    .expect("Failed to open MessAuto");
-                            }
-                        }
-                        Err(e) => {
-                            warn!("{}: {}", t!("binary-file-replace-failed"), e);
-                            MessageDialog::new()
-                                .set_title(&t!("update-failed"))
-                                .set_text(&e.to_string())
-                                .show_alert()
-                                .unwrap();
-                        }
-                    }
-                }
-            }
-        }
+        // if let Ok(msg) = rx.try_recv() {
+        //     if msg {
+        //         let yes = MessageDialog::new()
+        //             .set_title(&t!("new-version"))
+        //             .set_text(&t!("new-version-text"))
+        //             .show_confirm()
+        //             .unwrap();
+        //         if yes {
+        //             match replace_old_version() {
+        //                 Ok(_) => {
+        //                     info!("{}", t!("binary-file-replace-success"));
+        //                     let reboot = MessageDialog::new()
+        //                         .set_title(&t!("update-success"))
+        //                         .set_text(&t!("update-success-text"))
+        //                         .show_confirm()
+        //                         .unwrap();
+        //                     if reboot {
+        //                         tray_icon.take();
+        //                         *control_flow = ControlFlow::Exit;
+        //                         let _ = Command::new("open")
+        //                             .arg(get_current_exe_path())
+        //                             .output()
+        //                             .expect("Failed to open MessAuto");
+        //                     }
+        //                 }
+        //                 Err(e) => {
+        //                     warn!("{}: {}", t!("binary-file-replace-failed"), e);
+        //                     MessageDialog::new()
+        //                         .set_title(&t!("update-failed"))
+        //                         .set_text(&e.to_string())
+        //                         .show_alert()
+        //                         .unwrap();
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
         if let Ok(event) = menu_channel.try_recv() {
             if event.id == tray_menu_items.quit_i.id() {
                 tray_icon.take();

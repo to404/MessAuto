@@ -109,6 +109,10 @@ fn test_get_real_captcha() {
     );
     let result = get_real_captcha(&stdout);
     assert_eq!(result, "134560");
+
+    let stdout = String::from("Your confirmation code is below 一 enter it in your open browser window and we'll help you get signed in RKJ-YP6 If you didn't request this email, there's nothing to worry about - you can safely ignore it.");
+    let result = get_real_captcha(&stdout);
+    assert_eq!(result, "RKJ-YP6");
 }
 
 #[test]
