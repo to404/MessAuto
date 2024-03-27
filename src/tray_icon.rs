@@ -216,10 +216,34 @@ pub fn main() {
             } else if event.id == tray_menu_items.float_window.id() {
                 if tray_menu_items.float_window.is_checked() {
                     config.float_window = true;
+                    config.auto_paste = true;
+                    tray_menu_items.check_auto_paste.set_checked(true);
+                    tray_menu_items.check_auto_return.set_enabled(true);
+                    tray_menu_items.check_auto_paste.set_enabled(false);
                     info!("{}", t!("float-window-enabled"));
                 } else {
                     config.float_window = false;
+                    if !tray_menu_items.recover_clipboard.is_checked() {
+                        tray_menu_items.check_auto_paste.set_enabled(true);
+                    }
                     info!("{}", t!("float-window-disabled"));
+                }
+                config.update().expect("failed to update config");
+            } else if event.id == tray_menu_items.recover_clipboard.id() {
+                if tray_menu_items.recover_clipboard.is_checked() {
+                    config.recover_clipboard = true;
+                    config.auto_paste = true;
+                    tray_menu_items.check_auto_paste.set_checked(true);
+                    tray_menu_items.check_auto_return.set_enabled(true);
+                    tray_menu_items.check_auto_paste.set_enabled(false);
+                    info!("{}", t!("recover-clipboard-enabled"));
+                    info!("{}", t!("enable-auto-paste"));
+                } else {
+                    config.recover_clipboard = false;
+                    if !tray_menu_items.float_window.is_checked() {
+                        tray_menu_items.check_auto_paste.set_enabled(true);
+                    }
+                    info!("{}", t!("recover-clipboard-disabled"));
                 }
                 config.update().expect("failed to update config");
             } else {

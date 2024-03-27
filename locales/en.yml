@@ -59,5 +59,8 @@ unknown-operation: Unknown operation
 unsupported-platform: Unsupported platform
 error-when-open-authorization-window: Error when open authorization window
 popup-authorization-window: Popup authorization window
-
-
+recover-clipboard: Restore clipboard content
+recover-clipboard-disabled: Occupy the clipboard
+recover-clipboard-enabled: No longer occupy the clipboard
+unable-to-recover-clipboard: The clipboard cannot be restored. The clipboard may be empty.
+old-clpb-contents: Save the current clipboard content

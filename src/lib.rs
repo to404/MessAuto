@@ -9,8 +9,8 @@ use std::{
     time::Duration,
 };
 
+use arboard::Clipboard;
 use auto_launch::AutoLaunch;
-use clipboard::{ClipboardContext, ClipboardProvider};
 use emlx::parse_emlx;
 use futures::{
     channel::mpsc::{channel, Receiver},
@@ -26,7 +26,6 @@ use rdev::{simulate, EventType, SimulateError};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
-
 use tray_icon::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     TrayIconBuilder,
@@ -61,6 +60,8 @@ pub struct MAConfig {
     pub listening_to_mail: bool,
     #[serde(default)]
     pub float_window: bool,
+    #[serde(default)]
+    pub recover_clipboard: bool,
 }
 
 fn default_flags() -> Vec<String> {
@@ -85,6 +86,7 @@ impl Default for MAConfig {
             flags: default_flags(),
             listening_to_mail: false,
             float_window: false,
+            recover_clipboard: false,
         }
     }
 }
@@ -142,6 +144,7 @@ pub struct TrayMenuItems {
     pub logs: MenuItem,
     pub listening_to_mail: CheckMenuItem,
     pub float_window: CheckMenuItem,
+    pub recover_clipboard: CheckMenuItem,
 }
 
 impl TrayMenuItems {
@@ -176,6 +179,13 @@ impl TrayMenuItems {
 
         let float_window = CheckMenuItem::new(t!("float-window"), true, config.float_window, None);
 
+        let recover_clipboard = CheckMenuItem::new(
+            t!("recover-clipboard"),
+            true,
+            config.recover_clipboard,
+            None,
+        );
+
         TrayMenuItems {
             quit_i,
             check_auto_paste,
@@ -188,6 +198,7 @@ impl TrayMenuItems {
             float_window,
             maconfig,
             logs,
+            recover_clipboard,
         }
     }
 }
@@ -200,6 +211,7 @@ impl TrayMenu {
         let _ = tray_menu.append_items(&[
             &tray_menu_items.check_auto_paste,
             &tray_menu_items.check_auto_return,
+            &tray_menu_items.recover_clipboard,
             &PredefinedMenuItem::separator(),
             &Submenu::with_items(
                 t!("hide-icon"),
@@ -360,28 +372,6 @@ pub fn get_real_captcha(stdout: &str) -> String {
     real_captcha
 }
 
-// // paste code
-// pub fn paste(enigo: &mut Enigo) {
-//     // if have no accessibility, will pop up a window to ask for permission
-//     // check_accessibility();
-//     // Meta + v
-//     thread::sleep(Duration::from_millis(100));
-//     enigo.key_down(Key::Meta);
-//     thread::sleep(Duration::from_millis(100));
-//     enigo.key_click(Key::Raw(0x09));
-//     thread::sleep(Duration::from_millis(100));
-//     enigo.key_up(Key::Meta);
-//     thread::sleep(Duration::from_millis(100));
-// }
-//
-// // enter the pasted code
-// pub fn enter(enigo: &mut Enigo) {
-//     // check_accessibility();
-//     thread::sleep(Duration::from_millis(100));
-//     enigo.key_click(Key::Return);
-//     thread::sleep(Duration::from_millis(100));
-// }
-
 // send keyboard event
 pub fn send(event_type: &EventType) {
     match simulate(event_type) {
@@ -394,20 +384,17 @@ pub fn send(event_type: &EventType) {
 }
 
 pub fn paste_rdev() {
-    thread::spawn(|| {
-        send(&EventType::KeyPress(rdev::Key::MetaLeft));
-        send(&EventType::KeyPress(rdev::Key::KeyV));
-        send(&EventType::KeyRelease(rdev::Key::KeyV));
-        send(&EventType::KeyRelease(rdev::Key::MetaLeft));
-    });
+    send(&EventType::KeyPress(rdev::Key::MetaLeft));
+    send(&EventType::KeyPress(rdev::Key::KeyV));
+    send(&EventType::KeyRelease(rdev::Key::KeyV));
+    send(&EventType::KeyRelease(rdev::Key::MetaLeft));
 }
 
 pub fn enter_rdev() {
-    thread::spawn(|| {
-        send(&EventType::KeyPress(rdev::Key::Return));
-        send(&EventType::KeyRelease(rdev::Key::Return));
-    });
+    send(&EventType::KeyPress(rdev::Key::Return));
+    send(&EventType::KeyRelease(rdev::Key::Return));
 }
+
 pub fn messages_thread() {
     thread::spawn(move || {
         let flags = read_config().flags;
@@ -428,19 +415,26 @@ pub fn messages_thread() {
                     info!("{}:{:?}", t!("all-possible-codes"), captchas);
                     let real_captcha = get_real_captcha(&stdout);
                     info!("{}:{:?}", t!("real-verification-code"), real_captcha);
-                    let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
-                    ctx.set_contents(real_captcha.to_owned()).unwrap();
+                    let mut ctx = Clipboard::new().unwrap();
+                    let old_clipboard_contents = get_old_clipboard_contents();
+
                     let config = read_config();
                     if config.float_window {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
-                        paste_rdev();
+                        ctx.set_text(&real_captcha).unwrap();
+                        let paste_handle = thread::spawn(paste_rdev);
                         sleep_key();
                         info!("{}", t!("paste-verification-code"));
                         if config.auto_return {
-                            enter_rdev();
+                            paste_handle.join().unwrap();
+                            let enter_handle = thread::spawn(enter_rdev);
+                            enter_handle.join().unwrap();
                             sleep_key();
                             info!("{}", t!("press-enter"));
+                        }
+                        if config.recover_clipboard {
+                            recover_clipboard_contents(old_clipboard_contents);
                         }
                     }
                 }
@@ -663,20 +657,28 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                     info!("{}:{:?}", t!("all-possible-codes"), captchas);
                                     let real_captcha = get_real_captcha(&content);
                                     info!("{}:{:?}", t!("real-verification-code"), real_captcha);
-                                    let mut ctx: ClipboardContext =
-                                        ClipboardProvider::new().unwrap();
-                                    ctx.set_contents(real_captcha.to_owned()).unwrap();
+                                    let mut clpb = Clipboard::new().unwrap();
+
+                                    let old_clpb_contents = get_old_clipboard_contents();
+
                                     let config = read_config();
                                     if config.float_window {
                                         let _child = open_app(real_captcha, t!("mail").to_string());
                                     } else if config.auto_paste {
-                                        paste_rdev();
-                                        sleep_key();
+                                        clpb.set_text(&real_captcha).unwrap();
+                                        let paste_handle = thread::spawn(paste_rdev);
                                         info!("{}", t!("paste-verification-code"));
                                         if config.auto_return {
-                                            enter_rdev();
+                                            paste_handle.join().unwrap();
+                                            let enter_handle = thread::spawn(enter_rdev);
+                                            enter_handle.join().unwrap();
                                             sleep_key();
                                             info!("{}", t!("press-enter"));
+                                        }
+                                        if config.recover_clipboard {
+                                            info!("what fuck?");
+                                            async_std::task::sleep(Duration::from_secs(1)).await; //wait for pasted
+                                            recover_clipboard_contents(old_clpb_contents);
                                         }
                                     }
                                 }
@@ -721,5 +723,38 @@ fn start_process(command_args: Vec<String>) -> std::process::Child {
 }
 
 pub fn sleep_key() {
-    sleep(Duration::from_millis(20));
+    sleep(Duration::from_millis(60));
+}
+
+pub fn get_old_clipboard_contents() -> (
+    Result<String, arboard::Error>,
+    Result<arboard::ImageData<'static>, arboard::Error>,
+) {
+    let mut clpb = Clipboard::new().unwrap();
+    let string = clpb.get_text();
+    let image = clpb.get_image();
+
+    (string, image)
+}
+
+pub fn recover_clipboard_contents(
+    contents: (
+        Result<String, arboard::Error>,
+        Result<arboard::ImageData<'_>, arboard::Error>,
+    ),
+) {
+    let mut clpb = Clipboard::new().unwrap();
+    if contents.0.is_ok() {
+        let _ = clpb.set_text(contents.0.as_ref().unwrap());
+        info!(
+            "{}:{:?}",
+            t!("old-clpb-contents"),
+            contents.0.as_ref().unwrap()
+        );
+    } else if contents.1.is_ok() {
+        let _ = clpb.set_image(contents.1.unwrap());
+        info!("{}:{:?}", t!("old-clpb-contents"), "is an image");
+    } else {
+        warn!("{}", t!("unable-to-recover-clipboard"));
+    }
 }

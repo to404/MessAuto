@@ -59,4 +59,8 @@ unknown-operation: 未知操作
 unsupported-platform: 不支持的平台
 error-when-open-authorization-window: 打开授权窗口时出错
 popup-authorization-window: 弹出授权窗口
-
+recover-clipboard: 不占用剪贴板
+recover-clipboard-disabled: 占用剪贴板
+recover-clipboard-enabled: 不再占用剪贴板
+unable-to-recover-clipboard: 无法恢复剪贴板，可能剪贴板为空
+old-clpb-contents: 暂存当前剪贴板内容

@@ -1,18 +1,40 @@
 use core::time;
-use std::{thread::sleep, time::Duration};
+use std::{fs::File, thread::{self, sleep}, time::Duration};
 
+use arboard::Clipboard;
 use i_slint_backend_winit::winit::{
     dpi::{LogicalPosition, Position},
     platform::macos::WindowBuilderExtMacOS,
 };
 use log::{error, info};
+use simplelog::{
+    ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger,
+};
 use mouse_position::mouse_position::Mouse;
 use rust_i18n::t;
-use MessAuto::{enter_rdev, get_sys_locale, paste_rdev, sleep_key};
+use MessAuto::{enter_rdev, get_old_clipboard_contents, get_sys_locale, log_path, paste_rdev, read_config, recover_clipboard_contents, sleep_key};
 
 slint::include_modules!();
 
 pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
+    let logger_config = ConfigBuilder::new()
+        .build();
+
+    CombinedLogger::init(vec![
+        TermLogger::new(
+            LevelFilter::Info,
+            logger_config.clone(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        ),
+        WriteLogger::new(
+            LevelFilter::Info,
+            logger_config.clone(),
+            File::create(log_path()).unwrap(),
+        ),
+    ])
+    .unwrap();
+
     let locale = get_sys_locale();
     rust_i18n::set_locale(locale);
 
@@ -20,7 +42,7 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
     let verification_code_label = format!(
         "{}: {}\n{} {}",
         t!("verification-code"),
-        code,
+        &code,
         t!("from-label"),
         from_app
     );
@@ -61,15 +83,29 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         .set_position(slint::PhysicalPosition::new(mouse_pos.0, mouse_pos.1));
 
     let ui_handle = ui.as_weak();
+    let config = read_config();
+    let mut clpb = Clipboard::new().unwrap();
+
+    let captcha = String::from(code);
 
     ui.on_paste_code(move || {
         let ui = ui_handle.unwrap();
-        paste_rdev();
+        let old_clpb_contents = get_old_clipboard_contents();
+
+        clpb.set_text(captcha.as_str()).unwrap();
+
+        let paste_handle = thread::spawn(paste_rdev);
         info!("{}", t!("paste-verification-code"));
-        sleep_key();
-        enter_rdev();
-        info!("{}", t!("press-enter"));
-        sleep_key();
+        paste_handle.join().unwrap();
+        if config.auto_return {
+            let enter_handle = thread::spawn(enter_rdev);
+            info!("{}", t!("press-enter"));
+            enter_handle.join().unwrap();
+        }
+        if config.recover_clipboard {
+            info!("what fuck?");
+            recover_clipboard_contents(old_clpb_contents);
+        }
         ui.hide().unwrap();
     });
 
