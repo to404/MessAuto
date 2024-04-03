@@ -4,10 +4,10 @@
   <h4 align="center"> 自动提取Mac平台的短信和邮箱验证码</h4>
   <h4 align="center"> Automatic extraction of SMS verification code for Mac platform</h4>
 <p align="center">
-<a href="https://github.com/tisfeng/easydict/blob/main/LICENSE">
+<a href="https://github.com/LeeeSe/MessAuto/blob/master/LICENSE.txt">
 <img src="https://img.shields.io/github/license/LeeeSe/messauto"
             alt="License"></a>
-<a href="https://github.com/tisfeng/Easydict/releases">
+<a href="https://github.com/LeeeSe/MessAuto/releases">
 <img src="https://img.shields.io/github/downloads/LeeeSe/messauto/total.svg"
             alt="Downloads"></a>
 <a href="https://img.shields.io/badge/-macOS-black?&logo=apple&logoColor=white">
