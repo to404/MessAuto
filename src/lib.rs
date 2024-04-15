@@ -18,11 +18,13 @@ use futures::{
 };
 use home::home_dir;
 use log::{error, info, warn};
-use macos_accessibility_client::accessibility::application_is_trusted_with_prompt;
+use macos_accessibility_client::accessibility::{
+    application_is_trusted, application_is_trusted_with_prompt,
+};
 use mail_parser::MessageParser;
 use native_dialog::{MessageDialog, MessageType};
 use notify::{Config, Event, RecommendedWatcher, RecursiveMode, Watcher};
-use rdev::{simulate, EventType, SimulateError};
+use osakit::{Language, Script};
 use regex_lite::Regex;
 use rust_i18n::t;
 use serde::{Deserialize, Serialize};
@@ -309,8 +311,33 @@ pub fn check_full_disk_access() {
     }
 }
 
+pub fn check_script_permissions() -> bool {
+    let mut script = Script::new_from_source(
+        Language::AppleScript,
+        "
+        tell application \"System Events\"
+	key code 58
+        end tell
+    ",
+    );
+    script.compile().unwrap();
+    let result = script.execute();
+    if result.is_ok() {
+        return true;
+    } else {
+        return false;
+    }
+}
+
 pub fn check_accessibility() -> bool {
-    application_is_trusted_with_prompt()
+    if application_is_trusted_with_prompt() && check_script_permissions() {
+        return true;
+    }
+    false
+}
+
+pub fn check_accessibility_with_no_action() -> bool {
+    application_is_trusted()
 }
 
 // 检查最新信息是否是验证码类型,并返回关键词来辅助定位验证码
@@ -372,27 +399,34 @@ pub fn get_real_captcha(stdout: &str) -> String {
     real_captcha
 }
 
-// send keyboard event
-pub fn send(event_type: &EventType) {
-    match simulate(event_type) {
-        Ok(()) => (),
-        Err(SimulateError) => {
-            error!("cant-sent-keyboard-event");
-        }
-    }
-    sleep_key();
+pub fn paste_script() -> Result<(), Box<dyn Error>> {
+    let mut script = Script::new_from_source(
+        Language::AppleScript,
+        "
+        tell application \"System Events\"
+	keystroke \"v\" using command down
+        end tell
+    ",
+    );
+    script.compile()?;
+    script.execute()?;
+
+    Ok(())
 }
 
-pub fn paste_rdev() {
-    send(&EventType::KeyPress(rdev::Key::MetaLeft));
-    send(&EventType::KeyPress(rdev::Key::KeyV));
-    send(&EventType::KeyRelease(rdev::Key::KeyV));
-    send(&EventType::KeyRelease(rdev::Key::MetaLeft));
-}
+pub fn return_script() -> Result<(), Box<dyn Error>> {
+    let mut script = Script::new_from_source(
+        Language::AppleScript,
+        "
+        tell application \"System Events\"
+	key code 36
+        end tell
+    ",
+    );
+    script.compile()?;
+    script.execute()?;
 
-pub fn enter_rdev() {
-    send(&EventType::KeyPress(rdev::Key::Return));
-    send(&EventType::KeyRelease(rdev::Key::Return));
+    Ok(())
 }
 
 pub fn messages_thread() {
@@ -407,8 +441,6 @@ pub fn messages_thread() {
                 let stdout = get_message_in_one_minute();
                 let captcha_or_other = check_captcha_or_other(&stdout, &flags);
                 if captcha_or_other {
-                    // 保护用户隐私
-                    // info!("{}:{:?}", t!("new-verification-code-detected"), stdout);
                     info!("{}", t!("new-verification-code-detected"));
 
                     let captchas = get_captchas(&stdout);
@@ -423,14 +455,10 @@ pub fn messages_thread() {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
                         ctx.set_text(&real_captcha).unwrap();
-                        let paste_handle = thread::spawn(paste_rdev);
-                        sleep_key();
+                        paste_script().unwrap();
                         info!("{}", t!("paste-verification-code"));
                         if config.auto_return {
-                            paste_handle.join().unwrap();
-                            let enter_handle = thread::spawn(enter_rdev);
-                            enter_handle.join().unwrap();
-                            sleep_key();
+                            return_script().unwrap();
                             info!("{}", t!("press-enter"));
                         }
                         if config.recover_clipboard {
@@ -638,20 +666,19 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                     for path in event.paths {
                         let path = path.to_string_lossy();
                         if path.contains(".emlx") && path.contains("INBOX.mbox") {
+                            async_std::task::sleep(Duration::from_secs(1)).await; // prevent repeated reading
                             info!("{}: {:?}", t!("new-email-received"), path);
                             let path = path.replace(".tmp", "");
                             let content = read_emlx(&path);
                             info!("len: {}", content.len());
 
-                            // 保护用户隐私
+                            // Protect user privacy
                             // info!("{}", t!("email-content"));
 
                             if content.len() < 500 {
                                 let is_captcha =
                                     check_captcha_or_other(&content, &read_config().flags);
                                 if is_captcha {
-                                    // 保护用户隐私
-                                    // info!("检测到新的验证码类型邮件：{:?}", content);
                                     info!("{}", t!("new-verification-email-detected"));
                                     let captchas = get_captchas(&content);
                                     info!("{}:{:?}", t!("all-possible-codes"), captchas);
@@ -666,24 +693,19 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                         let _child = open_app(real_captcha, t!("mail").to_string());
                                     } else if config.auto_paste {
                                         clpb.set_text(&real_captcha).unwrap();
-                                        let paste_handle = thread::spawn(paste_rdev);
+                                        paste_script().unwrap();
                                         info!("{}", t!("paste-verification-code"));
                                         if config.auto_return {
-                                            paste_handle.join().unwrap();
-                                            let enter_handle = thread::spawn(enter_rdev);
-                                            enter_handle.join().unwrap();
-                                            sleep_key();
+                                            return_script().unwrap();
                                             info!("{}", t!("press-enter"));
                                         }
                                         if config.recover_clipboard {
-                                            info!("what fuck?");
                                             async_std::task::sleep(Duration::from_secs(1)).await; //wait for pasted
                                             recover_clipboard_contents(old_clpb_contents);
                                         }
                                     }
                                 }
                             }
-                            async_std::task::sleep(Duration::from_secs(5)).await;
                         }
                     }
                 }

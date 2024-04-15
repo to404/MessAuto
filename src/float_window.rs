@@ -1,24 +1,22 @@
-use core::time;
-use std::{fs::File, thread::{self, sleep}, time::Duration};
+use std::fs::File;
 
 use arboard::Clipboard;
-use i_slint_backend_winit::winit::{
-    dpi::{LogicalPosition, Position},
-    platform::macos::WindowBuilderExtMacOS,
-};
+use i_slint_backend_winit::winit::platform::macos::WindowBuilderExtMacOS;
 use log::{error, info};
+use mouse_position::mouse_position::Mouse;
+use rust_i18n::t;
 use simplelog::{
     ColorChoice, CombinedLogger, ConfigBuilder, LevelFilter, TermLogger, TerminalMode, WriteLogger,
 };
-use mouse_position::mouse_position::Mouse;
-use rust_i18n::t;
-use MessAuto::{enter_rdev, get_old_clipboard_contents, get_sys_locale, log_path, paste_rdev, read_config, recover_clipboard_contents, sleep_key};
+use MessAuto::{
+    get_old_clipboard_contents, get_sys_locale, log_path, paste_script, read_config,
+    recover_clipboard_contents, return_script,
+};
 
 slint::include_modules!();
 
 pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
-    let logger_config = ConfigBuilder::new()
-        .build();
+    let logger_config = ConfigBuilder::new().build();
 
     CombinedLogger::init(vec![
         TermLogger::new(
@@ -30,7 +28,7 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         WriteLogger::new(
             LevelFilter::Info,
             logger_config.clone(),
-            File::create(log_path()).unwrap(),
+            File::open(log_path()).unwrap(),
         ),
     ])
     .unwrap();
@@ -93,17 +91,13 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         let old_clpb_contents = get_old_clipboard_contents();
 
         clpb.set_text(captcha.as_str()).unwrap();
-
-        let paste_handle = thread::spawn(paste_rdev);
+        paste_script().unwrap();
         info!("{}", t!("paste-verification-code"));
-        paste_handle.join().unwrap();
         if config.auto_return {
-            let enter_handle = thread::spawn(enter_rdev);
+            return_script().unwrap();
             info!("{}", t!("press-enter"));
-            enter_handle.join().unwrap();
         }
         if config.recover_clipboard {
-            info!("what fuck?");
             recover_clipboard_contents(old_clpb_contents);
         }
         ui.hide().unwrap();

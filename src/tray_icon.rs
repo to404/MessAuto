@@ -1,6 +1,5 @@
 use std::fs::File;
 use std::process::Command;
-use std::sync::mpsc;
 
 use log::{info, trace, warn};
 use native_dialog::MessageDialog;
@@ -16,9 +15,9 @@ use tao::{
 use tray_icon::{menu::MenuEvent, TrayIconEvent};
 
 use MessAuto::{
-    auto_launch, check_accessibility, check_full_disk_access, config_path, get_current_exe_path,
-    get_sys_locale, log_path, mail_thread, messages_thread, read_config, replace_old_version,
-    update_thread, TrayIcon, TrayMenu, TrayMenuItems,
+    auto_launch, check_accessibility, check_accessibility_with_no_action, check_full_disk_access,
+    config_path, get_sys_locale, log_path, mail_thread, messages_thread, read_config, TrayIcon,
+    TrayMenu, TrayMenuItems,
 };
 
 rust_i18n::i18n!("locales");
@@ -70,6 +69,17 @@ pub fn main() {
     let tray_menu = TrayMenu::build(&tray_menu_items);
     let mut tray_icon = TrayIcon::build(tray_menu);
     tray_icon.as_mut().unwrap().set_icon_as_template(true);
+
+    if config.auto_paste {
+        if check_accessibility_with_no_action() {
+            info!("{}", t!("accessibility-permission-granted"));
+        } else {
+            warn!("{}", t!("accessibility-permission-denied"));
+            tray_menu_items.check_auto_paste.set_checked(false);
+            tray_menu_items.check_auto_return.set_checked(false);
+            tray_menu_items.recover_clipboard.set_checked(false);
+        }
+    }
 
     if config.hide_icon_forever {
         tray_icon
