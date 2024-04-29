@@ -462,12 +462,14 @@ pub fn messages_thread() {
                             info!("{}", t!("press-enter"));
                         }
                         if config.recover_clipboard {
+                            sleep(Duration::from_secs(2)); // wait applescript to finish
                             recover_clipboard_contents(old_clipboard_contents);
                         }
                     }
                 }
+                sleep(Duration::from_secs(5));
             }
-            sleep(Duration::from_secs(5));
+            sleep(Duration::from_secs(1)); // check db change every second
         }
     });
 }
@@ -700,7 +702,7 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                             info!("{}", t!("press-enter"));
                                         }
                                         if config.recover_clipboard {
-                                            async_std::task::sleep(Duration::from_secs(1)).await; //wait for pasted
+                                            async_std::task::sleep(Duration::from_secs(2)).await; //wait for pasted
                                             recover_clipboard_contents(old_clpb_contents);
                                         }
                                     }

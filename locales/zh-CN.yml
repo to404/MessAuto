@@ -63,4 +63,4 @@ recover-clipboard: 不占用剪贴板
 recover-clipboard-disabled: 占用剪贴板
 recover-clipboard-enabled: 不再占用剪贴板
 unable-to-recover-clipboard: 无法恢复剪贴板，可能剪贴板为空
-old-clpb-contents: 暂存当前剪贴板内容
+old-clpb-contents: 恢复旧剪贴板内容

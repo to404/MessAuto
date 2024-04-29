@@ -1,4 +1,4 @@
-use std::fs::File;
+use std::{fs::File, thread::sleep, time::Duration};
 
 use arboard::Clipboard;
 use i_slint_backend_winit::winit::platform::macos::WindowBuilderExtMacOS;
@@ -98,6 +98,7 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
             info!("{}", t!("press-enter"));
         }
         if config.recover_clipboard {
+            sleep(Duration::from_secs(2));
             recover_clipboard_contents(old_clpb_contents);
         }
         ui.hide().unwrap();
