@@ -91,11 +91,15 @@ pub fn main(code: &str, from_app: &str) -> Result<(), slint::PlatformError> {
         let old_clpb_contents = get_old_clipboard_contents();
 
         clpb.set_text(captcha.as_str()).unwrap();
-        paste_script().unwrap();
-        info!("{}", t!("paste-verification-code"));
+        match paste_script() {
+            Ok(_) => info!("{}", t!("paste-verification-code")),
+            Err(e) => error!("{}: {:?}", t!("error-paste-verification-code"), e),
+        }
         if config.auto_return {
-            return_script().unwrap();
-            info!("{}", t!("press-enter"));
+            match return_script() {
+                Ok(_) => info!("{}", t!("press-enter")),
+                Err(e) => error!("{}: {:?}", t!("error-press-enter"), e),
+            }
         }
         if config.recover_clipboard {
             sleep(Duration::from_secs(2));

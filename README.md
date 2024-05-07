@@ -68,9 +68,10 @@ ARM64 版本打开时会提示文件损坏，因其需要 Apple 开发者签名�
 - 移动 MessAuto.app 到 `/Applications` 文件夹下
 - 终端执行`xattr -cr /Applications/MessAuto.app`
 
-如果 MessAuto 出现无法自动粘贴验证码的问题，一般出现在重新安装新版本时，可以尝试以下解决方案：
+如果 MessAuto 出现无法自动粘贴验证码的问题，一般是没有辅助功能权限或者自动化权限，可以尝试以下解决方案：
 
-打开系统偏好设置 -> 安全性与隐私 -> 辅助功能，将其中 MessAuto 删除，并添加新的 MessAuto.app
+1.  打开系统偏好设置 -> 安全性与隐私 -> 辅助功能，将其中 MessAuto 删除，并添加新的 MessAuto.app
+2.  运行`tccutil reset AppleEvents com.doe.messauto`来重置 MessAuto 的自动化权限,然后重启应用并不断勾选自动粘贴选项来让 MessAuto 主动发起自动化权限请求
 
 ## TODO
 
@@ -104,6 +105,7 @@ macOS 平台可以方便地接收来自 iPhone 的短信，无需每次打开手
 - 邮件 App 需要常驻后台，否则无法实时获取到最新的邮件
 - 完全磁盘访问权限（为了访问位于 `～/Library` 下的 `Message.app` 的 `chat.db` 文件，以获取最新的短信）
 - 辅助功能权限（模拟键盘操作，自动粘贴并回车）
+- 自动化权限（模拟键盘操作，位置：设置->安全性与隐私->隐私->自动化，此权限只能程序主动请求用户同意，用户无法主动授予）
 
 ## 已知缺陷
 
@@ -121,7 +123,7 @@ cd MessAuto
 cargo run
 
 # 安装 cargo-bundle
-cargo install cargo-bundle
+cargo install cargo-bundle --git https://github.com/zed-industries/cargo-bundle.git --branch add-plist-extension
 # 打包应用
 cargo bundle --release
 ```
@@ -137,7 +139,7 @@ cargo bundle --release
 
 - 给了权限但还是弹出权限请求：暂时的解决方法是从设置面板的辅助功能和磁盘权限列表中将原来的 MessAuto 通过下面的"-"号移除，当再次弹出权限请求时正常同意即可工作
 
-- 如果 MessAuto 出现无法自动粘贴验证码的问题，一般出现在重新安装新版本时，可以尝试：打开系统偏好设置 -> 安全性与隐私 -> 辅助功能，将其中 MessAuto 删除，并添加新的 MessAuto.app
+- 权限都给了，验证码可以提取到剪贴板但不会自动粘贴，可能是程序初次请求自动化权限用户拒绝或直接忽略了，这个权限的位置在：设置->安全性与隐私->隐私->自动化，用户无法直接添加，只能通过程序再次请求，所以只能通过重置权限的方式解决，运行这条命令并重启程序：`tccutil reset AppleEvents com.doe.messauto`，反复勾选自动粘贴选项来触发自动化权限请求：`tccutil reset AppleEvents com.doe.messauto`
 
 ## 感谢
 

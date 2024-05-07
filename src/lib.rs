@@ -455,11 +455,15 @@ pub fn messages_thread() {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
                     } else if config.auto_paste && !config.float_window {
                         ctx.set_text(&real_captcha).unwrap();
-                        paste_script().unwrap();
-                        info!("{}", t!("paste-verification-code"));
+                        match paste_script() {
+                            Ok(_) => info!("{}", t!("paste-verification-code")),
+                            Err(e) => error!("{}: {:?}", t!("error-paste-verification-code"), e),
+                        }
                         if config.auto_return {
-                            return_script().unwrap();
-                            info!("{}", t!("press-enter"));
+                            match return_script() {
+                                Ok(_) => info!("{}", t!("press-enter")),
+                                Err(e) => error!("{}: {:?}", t!("error-press-enter"), e),
+                            }
                         }
                         if config.recover_clipboard {
                             sleep(Duration::from_secs(2)); // wait applescript to finish
@@ -695,11 +699,21 @@ async fn async_watch<P: AsRef<Path>>(path: P) -> notify::Result<()> {
                                         let _child = open_app(real_captcha, t!("mail").to_string());
                                     } else if config.auto_paste {
                                         clpb.set_text(&real_captcha).unwrap();
-                                        paste_script().unwrap();
-                                        info!("{}", t!("paste-verification-code"));
+                                        match paste_script() {
+                                            Ok(_) => info!("{}", t!("paste-verification-code")),
+                                            Err(e) => error!(
+                                                "{}: {:?}",
+                                                t!("error-paste-verification-code"),
+                                                e
+                                            ),
+                                        }
                                         if config.auto_return {
-                                            return_script().unwrap();
-                                            info!("{}", t!("press-enter"));
+                                            match return_script() {
+                                                Ok(_) => info!("{}", t!("press-enter")),
+                                                Err(e) => {
+                                                    error!("{}: {:?}", t!("error-press-enter"), e)
+                                                }
+                                            }
                                         }
                                         if config.recover_clipboard {
                                             async_std::task::sleep(Duration::from_secs(2)).await; //wait for pasted
