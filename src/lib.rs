@@ -453,11 +453,15 @@ pub fn messages_thread() {
                     let config = read_config();
                     if config.float_window {
                         let _child = open_app(real_captcha, t!("imessage").to_string());
-                    } else if config.auto_paste && !config.float_window {
+                    } else if !config.float_window {
                         ctx.set_text(&real_captcha).unwrap();
-                        match paste_script() {
-                            Ok(_) => info!("{}", t!("paste-verification-code")),
-                            Err(e) => error!("{}: {:?}", t!("error-paste-verification-code"), e),
+                        if config.auto_paste {
+                            match paste_script() {
+                                Ok(_) => info!("{}", t!("paste-verification-code")),
+                                Err(e) => {
+                                    error!("{}: {:?}", t!("error-paste-verification-code"), e)
+                                }
+                            }
                         }
                         if config.auto_return {
                             match return_script() {
