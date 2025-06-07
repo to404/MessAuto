@@ -144,5 +144,3 @@ cargo bundle --release
 ## 感谢
 
 - 感谢 [@尚善若拙](https://sspai.com/post/73072) 提供获取短信思路
-## 赞助
-[![Powered by DartNode](https://dartnode.com/branding/DN-Open-Source-sm.png)](https://dartnode.com "Powered by DartNode - Free VPS for Open Source")
