@@ -1,3 +1,6 @@
+<p>
+本项目fork自LeeeSe/MessAuto，添加了弹窗关闭按钮，并去掉了粘贴验证码后的2s延迟。
+
 <p align="center">
   <img src="assets/images/icon_256.png" height="256">
   <h1 align="center">MessAuto</h1>
